@@ -22,7 +22,7 @@ const path = require('path');
 const promisify = require('promisify-node');
 const fs = require('fs');
 
-const testServerGen = require('../../../../utils/test-server-generator');
+const testServerGen = require('../../utils/test-server-generator');
 
 const fsePromise = promisify('fs-extra');
 
@@ -91,7 +91,7 @@ module.exports = (webdriverCb) => {
         return testServer.start('.', 5050);
       })
       .then((portNumber) => {
-        baseTestUrl = `http://localhost:${portNumber}/packages/sw-appcache-behavior/test/`;
+        baseTestUrl = `http://localhost:${portNumber}/test/`;
       });
     });
 

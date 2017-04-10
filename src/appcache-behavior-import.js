@@ -17,8 +17,8 @@
 
 'use strict';
 
-import IDBHelper from '../../../lib/idb-helper.js';
-import logHelper from '../../../lib/log-helper.js';
+import IDBHelper from './lib/idb-helper.js';
+import logHelper from './lib/log-helper.js';
 import constants from './lib/constants.js';
 
 const idbHelpers = {};
