@@ -1,5 +1,7 @@
 # sw-appcache-behavior
 
+[![Build Status](https://travis-ci.org/GoogleChrome/sw-appcache-behavior.svg?branch=master)](https://travis-ci.org/GoogleChrome/sw-appcache-behavior)
+
 A service worker implementation of the behavior defined in a page's App Cache manifest.
 
 ## Installation
