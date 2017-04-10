@@ -1,0 +1,41 @@
+sudo: required
+dist: trusty
+language: node_js
+
+cache:
+  directories:
+    - node_modules
+    - ~/.selenium-assistant
+
+node_js:
+  - 'stable'
+
+env:
+  - PROJECT="sw-appcache-behavior"
+  - PROJECT="sw-background-sync-queue"
+  - PROJECT="sw-broadcast-cache-update"
+  - PROJECT="sw-cache-expiration"
+  - PROJECT="sw-build"
+  - PROJECT="sw-cli"
+  - PROJECT="sw-lib"
+  - PROJECT="sw-offline-google-analytics"
+  - PROJECT="sw-precaching"
+  - PROJECT="sw-routing"
+  - PROJECT="sw-runtime-caching"
+
+install:
+  # Install specific version of lerna - otherwise a lerna.json mismatch will
+  # fail future builds.
+  - npm install -g gulp-cli lerna@2.0.0-beta.38
+  - npm install
+  - lerna bootstrap --scope "${PROJECT}" --include-filtered-dependencies
+
+# Read more here: https://docs.travis-ci.com/user/gui-and-headless-browsers/#Using-xvfb-to-Run-Tests-That-Require-a-GUI
+before_script:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start || echo \"Unable to start virtual display.\""
+  - sleep 3 # give xvfb some time to start
+
+script:
+  # Building is handled in gulp test.
+  - gulp test --project "${PROJECT}"
