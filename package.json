@@ -10,51 +10,25 @@
     "manifest",
     "app cache"
   ],
-  "files": [
-    "src",
-    "build"
-  ],
   "author": {
     "name": "Jeff Posnick",
     "email": "jeffy@google.com",
     "url": "https://jeffy.info"
   },
   "license": "Apache-2.0",
-  "repository": "googlechrome/sw-appcache-behavior",
-  "bugs": "https://github.com/googlechrome/sw-appcache-behavior/issues",
-  "homepage": "https://github.com/GoogleChrome/sw-appcache-behavior/",
+  "repository": "googlechromelabs/sw-appcache-behavior",
+  "bugs": "https://github.com/googlechromelabs/sw-appcache-behavior/issues",
+  "homepage": "https://github.com/googlechromelabs/sw-appcache-behavior/",
   "devDependencies": {
-    "chai": "^3.5.0",
-    "cookie-parser": "^1.4.3",
-    "eslint-config-google": "^0.7.1",
-    "express": "^4.15.2",
-    "fs-extra": "^2.1.2",
-    "geckodriver": "1.4.0",
-    "gulp": "^3.9.1",
-    "gulp-babel": "^6.1.2",
-    "gulp-compile-handlebars": "^0.6.1",
-    "gulp-eslint": "^3.0.1",
-    "gulp-header": "^1.8.8",
-    "gulp-if": "^2.0.2",
-    "gulp-insert": "^0.5.0",
-    "gulp-rename": "^1.2.2",
-    "gulp-rollup": "^2.11.0",
-    "gulp-sourcemaps": "^2.5.1",
-    "gulp-spawn-mocha": "^3.3.0",
-    "jsdoc-strip-async-await": "^0.1.0",
-    "mocha": "^3.2.0",
-    "promisify-node": "^0.4.0",
-    "rollup-plugin-babel": "^2.7.1",
-    "rollup-plugin-commonjs": "^8.0.2",
-    "rollup-plugin-node-resolve": "^3.0.0",
-    "run-sequence": "^1.2.2",
-    "selenium-assistant": "^5.0.4",
-    "serve-index": "^1.8.0",
-    "sw-testing-helpers": "^1.0.2"
+    "idb-keyval": "^3.1.0",
+    "rimraf": "^2.6.3",
+    "rollup": "^1.1.2",
+    "rollup-plugin-node-resolve": "^4.0.0",
+    "rollup-plugin-typescript2": "^0.19.2",
+    "typescript": "^3.3.1"
   },
-  "dependencies": {
-    "blueimp-md5": "^2.7.0",
-    "idb": "^2.0.1",
-    "parse-appcache-manifest": "^0.2.0"
+  "scripts": {
+    "build": "npm run clean && rollup --config=rollup.config.js",
+    "clean": "rimraf dist"
   }
 }
