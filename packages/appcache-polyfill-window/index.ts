@@ -13,16 +13,18 @@
  limitations under the License.
 */
 
-import * as kv from 'idb-keyval';
+/// <reference lib="dom" />
 
-import {getHash} from './lib/hash';
-import {parseManifest} from './lib/parseManifest';
+import * as storage from 'idb-keyval';
+
+import {getHash} from '../../lib/getHash';
+import {parseManifest} from '../../lib/parseManifest';
 
 import {
   Manifest,
   ManifestURLToHashes,
   PageURLToManifestURL
-} from './lib/interfaces';
+} from '../../lib/interfaces';
 
 async function init() {
   const manifestAttribute = document.documentElement.getAttribute('manifest');
@@ -112,8 +114,8 @@ async function checkManifestVersion(manifestUrl: string) {
   const manifestContents = await manifestResponse.text();
   const hash = await getHash(manifestUrl + manifestContents);
   
-  const manifestURLToHashes: ManifestURLToHashes = (await kv.get('ManifestURLToHashes') || {});
-  const hashesToManifest = manifestURLToHashes[manifestUrl] || {};
+  const manifestURLToHashes: ManifestURLToHashes = (await storage.get('ManifestURLToHashes') || {});
+  const hashesToManifest = manifestURLToHashes[manifestUrl] || new Map<string, Manifest>();
 
   // If we already have an entry for this version of the manifest, we can
   // return without updating anything.
@@ -127,9 +129,9 @@ async function checkManifestVersion(manifestUrl: string) {
   // in the list of known manifest hashes, then update things.
   const parsedManifest = parseManifest(manifestContents);
 
-  hashesToManifest[hash] = parsedManifest;
+  hashesToManifest.set(hash, parsedManifest);
   manifestURLToHashes[manifestUrl] = hashesToManifest;
-  await kv.set('ManifestURLToHashes', manifestURLToHashes);
+  await storage.set('ManifestURLToHashes', manifestURLToHashes);
 
   await cacheManifestURLs(manifestUrl, hash, parsedManifest);
 
@@ -144,7 +146,7 @@ async function cacheManifestURLs(
   const fallbackUrls = Object.values(parsedManifest.fallback);
   const urlsToCache = parsedManifest.cache.concat(fallbackUrls);
 
-  const pageURLToManifestURL: PageURLToManifestURL = (await kv.get('PageURLToManifestURL') || {});
+  const pageURLToManifestURL: PageURLToManifestURL = (await storage.get('PageURLToManifestURL') || {});
 
   for (const [pageURL, savedManifestURL] of Object.entries(pageURLToManifestURL)) {
     if (currentManifestURL === savedManifestURL) {
@@ -161,11 +163,11 @@ async function updateManifestAssociationForCurrentPage(
   manifestUrl: string,
   hash: string
 ) {
-  const pageURLToManifestURL: PageURLToManifestURL = (await kv.get('PageURLToManifestURL') || {});
+  const pageURLToManifestURL: PageURLToManifestURL = (await storage.get('PageURLToManifestURL') || {});
   pageURLToManifestURL[location.href] = manifestUrl;
 
   await Promise.all([
-    kv.set('PageURLToManifestURL', pageURLToManifestURL),
+    storage.set('PageURLToManifestURL', pageURLToManifestURL),
     addToCache(hash, [location.href]),
   ]);
 }

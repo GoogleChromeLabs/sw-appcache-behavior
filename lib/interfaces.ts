@@ -13,10 +13,12 @@ export interface ManifestURLToHashes {
   [key: string]: HashToManifest,
 }
 
-export interface HashToManifest {
-  [key: string]: Manifest,
-}
+export type HashToManifest = Map<string, Manifest>
 
 export interface PageURLToManifestURL {
+  [key: string]: string,
+}
+
+export interface ClientIdToHash {
   [key: string]: string,
 }

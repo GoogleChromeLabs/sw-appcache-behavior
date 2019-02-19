@@ -1,5 +1,5 @@
 /*
- Copyright 2016 Google Inc. All Rights Reserved.
+ Copyright 2019 Google Inc. All Rights Reserved.
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -13,183 +13,91 @@
  limitations under the License.
 */
 
-/* eslint-env worker, serviceworker */
+/// <reference path="../../node_modules/types-serviceworker/index.d.ts" />
+/// <reference lib="esnext" />
 
-'use strict';
+import * as storage from 'idb-keyval';
 
-import IDBHelper from './lib/idb-helper.js';
-import logHelper from './lib/log-helper.js';
-import constants from './lib/constants.js';
+import {fetchWithFallback} from '../../lib/fetchWithFallback';
+import {longestMatchingPrefix} from '../../lib/longestMatchingPrefix';
 
-const idbHelpers = {};
-Object.keys(constants.STORES).forEach((storeId) => {
-  idbHelpers[constants.STORES[storeId]] = new IDBHelper(
-    constants.DB_NAME, constants.DB_VERSION, constants.STORES[storeId]);
-});
+import {
+  ClientIdToHash,
+  Manifest,
+  ManifestURLToHashes,
+} from '../../lib/interfaces';
 
-/**
- * Determines what the most likely URL is associated with the client page from
- * which the event's request originates. This is used to determine which
- * AppCache manifest's rules should be applied.
- *
- * @private
- * @param {FetchEvent} event
- * @return {Promise.<String>} The client URL
- */
-function getClientUrlForEvent(event) {
-  // If our service worker implementation supports client identifiers, try
-  // to get the client URL using that.
-  return self.clients.get(event.clientId)
-    .then((client) => client.url)
-    // If those aren't supported, .catch() any errors and try something else.
-    .catch((error) => {
-      logHelper.error(
-        'Error while using clients.get(event.clientId).url: ' + error);
-      // Firefox currently sets the referer to 'about:client' for initial
-      // navigations, but that's not useful for our purposes.
-      if (event.request.referrer &&
-          event.request.referrer !== 'about:client') {
-        return event.request.referrer;
-      }
-
-      // Use the event's request URL as the last resort, with the assumption
-      // that this is a navigation request.
-      return event.request.url;
-    });
-}
-
-/**
- * Finds the longest matching prefix, given an array of possible matches.
- *
- * @private
- * @param {Array.<String>} urlPrefixes
- * @param {String} fullUrl
- * @return {String} The longest matching prefix, or '' if none match
- */
-function longestMatchingPrefix(urlPrefixes, fullUrl) {
-  return urlPrefixes
-    .filter((urlPrefix) => fullUrl.startsWith(urlPrefix))
-    .reduce((longestSoFar, current) => {
-      return longestSoFar.length >= current.length ? longestSoFar : current;
-    }, '');
-}
-
-/**
- * Performs a fetch(), using a cached response as a fallback if that fails.
- *
- * @private
- * @param {Request} request
- * @param {String} fallbackUrl
- * @param {String} cacheName
- * @return {Promise.<Response>}
- */
-function fetchWithFallback(request, fallbackUrl, cacheName) {
-  logHelper.log('Trying fetch for', request.url);
-  return fetch(request).then((response) => {
-    // Succesful but error-like responses are treated as failures.
-    // Ditto for redirects to other origins.
-    if (!response.ok || (new URL(response.url).origin !== location.origin)) {
-      throw Error('Fallback request failure.');
+async function getClientUrlForEvent(event: FetchEvent) {
+  try {
+    // TODO: I have no idea if this is the right precedence.
+    const effectiveClientId =
+      event.replacesClientId || event.resultingClientId || event.clientId;
+    const client = await self.clients.get(effectiveClientId);
+    return client.url;
+  } catch(e) {
+    // Firefox currently sets the referer to 'about:client' for initial
+    // navigations, but that's not useful for our purposes.
+    if (event.request.referrer && event.request.referrer !== 'about:client') {
+      return event.request.referrer;
     }
-    return response;
-  }).catch(() => {
-    logHelper.warn('fetch() failed. Falling back to cache of', fallbackUrl);
-    return caches.open(cacheName).then(
-      (cache) => cache.match(fallbackUrl));
-  });
+
+    // Use the event's request URL as the last resort, with the assumption
+    // that this is a navigation request and we can't detect it otherwise.
+    return event.request.url;
+  }
 }
 
-/**
- * Checks IndexedDB for a manifest with a given URL. If found, it fulfills
- * with info about the latest version.
- *
- * @private
- * @param {String} manifestUrl
- * @return {Promise.<Object>}
- */
-function getLatestManifestVersion(manifestUrl) {
-  return idbHelpers[constants.STORES.MANIFEST_URL_TO_CONTENTS].get(manifestUrl)
-    .then((versions) => {
-      if (versions && versions.length) {
-        return versions[versions.length - 1];
-      }
-    });
-}
-
-/**
- * Checks IndexedDB for a manifest with a given URL, versioned with the
- * given hash. If found, it fulfills with the parsed manifest.
- *
- * @private
- * @param {String} manifestUrl
- * @param {String} manifestHash
- * @return {Promise.<Object>}
- */
-function getParsedManifestVersion(manifestUrl, manifestHash) {
-  return idbHelpers[constants.STORES.MANIFEST_URL_TO_CONTENTS].get(manifestUrl)
-    .then((versions) => {
-      versions = versions || [];
-      logHelper.log('versions is', versions);
-      return versions.reduce((result, current) => {
-        logHelper.log('current is', current);
-        // If we already have a result, just keep returning it.
-        if (result) {
-          logHelper.log('result is', result);
-          return result;
-        }
-
-        // Otherwise, check to see if the hashes match. If so, use the parsed
-        // manifest for the current entry as the result.
-        if (current.hash === manifestHash) {
-          logHelper.log('manifestHash match', current);
-          return current.parsed;
-        }
-
-        return null;
-      }, null);
-    });
-}
-
-/**
- * Updates the CLIENT_ID_TO_HASH store in IndexedDB with the client id to
- * hash association.
- *
- * @private
- * @param {String} clientId
- * @param {String} hash
- * @return {Promise.<T>}
- */
-function saveClientIdAndHash(clientId, hash) {
-  if (clientId) {
-    return idbHelpers[constants.STORES.CLIENT_ID_TO_HASH].put(clientId, hash);
+async function getLatestManifestVersion(manifestUrl: string) {
+  const manifestURLToHashes: ManifestURLToHashes = await storage.get('ManifestURLToHashes');
+  if (!manifestURLToHashes) {
+    return;
   }
 
-  // Return a fulfilled Promise so that we can still call .then().
-  return Promise.resolve();
+  const hashesToManifest = manifestURLToHashes[manifestUrl];
+  if (!hashesToManifest) {
+    return;
+  }
+
+  const hashes = [...hashesToManifest.keys()];
+  // Map objects preserve the ordering of insertion, so the last key will be the
+  // most recent hash.
+  return hashes[hashes.length - 1];
 }
 
-/**
- * Implements the actual AppCache logic, given a specific manifest and hash
- * used as a cache identifier.
- *
- * @private
- * @param {FetchEvent} event
- * @param {Object} manifest
- * @param {String} hash
- * @param {String} clientUrl
- * @return {Promise.<Response>}
- */
-function appCacheLogic(event, manifest, hash, clientUrl) {
-  logHelper.log('manifest is', manifest, 'version is', hash);
+async function getManifestWithHash(manifestUrl: string, hash: string) {
+  const manifestURLToHashes: ManifestURLToHashes = (await storage.get('ManifestURLToHashes') || {});
+
+  const hashToManifest = manifestURLToHashes[manifestUrl];
+  if (!hashToManifest) {
+    return;
+  }
+
+  return hashToManifest.get(hash);
+}
+
+async function saveClientIdAndHash(clientId: string, hash: string) {
+  if (clientId) {
+    const clientIdToHash: ClientIdToHash = (await storage.get('ClientIdToHash') || {});
+    clientIdToHash[clientId] = hash;
+    await storage.set('ClientIdToHash', clientIdToHash);
+  }
+}
+
+async function appCacheLogic(
+  event: FetchEvent,
+  manifest: Manifest,
+  hash: string,
+  clientUrl: string
+) {
   const requestUrl = event.request.url;
 
   // Is our request URL listed in the CACHES section?
   // Or is our request URL the client URL, since any page that
   // registers a manifest is treated as if it were in the CACHE?
-  if (manifest.cache.includes(requestUrl) || requestUrl === clientUrl) {
-    logHelper.log('CACHE includes URL; using cache.match()');
+  if (manifest.cache.includes(requestUrl) || (requestUrl === clientUrl)) {
     // If so, return the cached response.
-    return caches.open(hash).then((cache) => cache.match(requestUrl));
+    const cache = await caches.open(hash);
+    return cache.match(requestUrl);
   }
 
   // Otherwise, check the FALLBACK section next.
@@ -199,7 +107,6 @@ function appCacheLogic(event, manifest, hash, clientUrl) {
   const fallbackKey = longestMatchingPrefix(Object.keys(manifest.fallback),
     requestUrl);
   if (fallbackKey) {
-    logHelper.log('fallbackKey in parsedManifest matches', fallbackKey);
     return fetchWithFallback(event.request, manifest.fallback[fallbackKey],
       hash);
   }
@@ -207,70 +114,62 @@ function appCacheLogic(event, manifest, hash, clientUrl) {
   // If CACHE and FALLBACK don't apply, try NETWORK.
   if (manifest.network.includes(requestUrl) ||
       manifest.network.includes('*')) {
-    logHelper.log('Match or * in NETWORK; using fetch()');
     return fetch(event.request);
   }
 
   // If nothing matches, then return an error response.
-  logHelper.log('Nothing matches; using Response.error()');
   return Response.error();
 }
 
-/**
- * The behavior when there's a matching manifest for our client URL.
- *
- * @private
- * @param {FetchEvent} event
- * @param {String} manifestUrl
- * @param {String} clientUrl
- * @return {Promise.<Response>}
- */
-function manifestBehavior(event, manifestUrl, clientUrl) {
+async function manifestBehavior(
+  event: FetchEvent,
+  manifestUrl: string,
+  clientUrl: string
+) {
   if (event.clientId) {
-    return idbHelpers[constants.STORES.CLIENT_ID_TO_HASH].get(event.clientId)
-      .then((hash) => {
-        // If we already have a hash assigned to this client id, use that
-        // manifest to implement the AppCache logic.
-        if (hash) {
-          return getParsedManifestVersion(manifestUrl, hash)
-            .then((parsedManifest) => appCacheLogic(event, parsedManifest, hash,
-              clientUrl));
-        }
+    const clientIdToHash: ClientIdToHash = (await storage.get('ClientIdToHash') || {});
+    const hash = clientIdToHash[event.clientId];
 
-        // If there's isn't yet a hash for this client id, then get the latest
-        // version of the manifest, and use that to implement AppCache logic.
-        // Also, establish the client id to hash mapping for future use.
-        return getLatestManifestVersion(manifestUrl).then((latest) => {
-          return saveClientIdAndHash(event.clientId, latest.hash)
-            .then(() => appCacheLogic(event, latest.parsed, latest.hash,
-              clientUrl));
-        });
-      });
+    // If we already have a hash assigned to this client id, use the associated
+    // manifest to implement the AppCache logic.
+    if (hash) {
+      const manifest = await getManifestWithHash(manifestUrl, hash);
+      if (manifest) {
+        return appCacheLogic(event, manifest, hash, clientUrl);
+      }
+    }
   }
 
-  // If there's no client id, then just use the latest version of the
-  // manifest to implement AppCache logic.
-  return getLatestManifestVersion(manifestUrl).then(
-    (latest) => appCacheLogic(event, latest.parsed, latest.hash, clientUrl));
+  // If there's isn't yet a hash for this client id, or there's no client id,
+  // then get the latest version of the manifest, and use that to implement
+  // AppCache logic.
+  const latestHash = await getLatestManifestVersion(manifestUrl);
+  if (latestHash) {
+    // Establish the clientId-to-hash mapping for future use.
+    if (event.clientId) {
+      await saveClientIdAndHash(event.clientId, latestHash);
+    }
+
+    const manifest = await getManifestWithHash(manifestUrl, latestHash);
+    if (manifest) {
+      return appCacheLogic(event, manifest, latestHash, clientUrl);
+    }
+  }
+
+  // If we don't have a matching manifest, return an error response.
+  return Response.error();
 }
 
-/**
- * The behavior when there is no matching manifest for our client URL.
- *
- * @private
- * @param {FetchEvent} event
- * @return {Promise.<Response>}
- */
-function noManifestBehavior(event) {
+async function noManifestBehavior(event: FetchEvent) {
   // If we fall through to this point, then we don't have a known
   // manifest associated with the client making the request.
   // We now need to check to see if our request URL matches a prefix
   // from the FALLBACK section of *any* manifest in our origin. If
   // there are multiple matches, the longest prefix wins. If there are
   // multiple prefixes of the same length in different manifest, then
-  // the one returned last from IDB wins. (This might not match
-  // browser behavior.)
+  // the one we access last wins. (This might not match browser behavior.)
   // See https://www.w3.org/TR/2011/WD-html5-20110525/offline.html#concept-appcache-matches-fallback
+  const manifestUrls = (await storage.get('ManifestURLToHashes') || {});
   return idbHelpers[constants.STORES.MANIFEST_URL_TO_CONTENTS].getAllValues()
     .then((manifests) => {
       logHelper.log('All manifests:', manifests);
