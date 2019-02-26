@@ -13,7 +13,6 @@
  limitations under the License.
 */
 
-/// <reference path="../../node_modules/types-serviceworker/index.d.ts" />
 /// <reference lib="esnext" />
 
 import * as storage from 'idb-keyval';
@@ -25,13 +24,17 @@ import {
   ClientIdToHash,
   Manifest,
   ManifestURLToHashes,
+  PageURLToManifestURL,
 } from '../../lib/interfaces';
 
 async function getClientUrlForEvent(event: FetchEvent) {
   try {
-    // TODO: I have no idea if this is the right precedence.
+    // TODO: Figure out if this is the right precedence.
     const effectiveClientId =
-      event.replacesClientId || event.resultingClientId || event.clientId;
+      // Is replacesClientId implemented anywhere?
+      // event.replacesClientId ||
+      event.resultingClientId ||
+      event.clientId;
     const client = await self.clients.get(effectiveClientId);
     return client.url;
   } catch(e) {
@@ -94,7 +97,7 @@ async function appCacheLogic(
   // Is our request URL listed in the CACHES section?
   // Or is our request URL the client URL, since any page that
   // registers a manifest is treated as if it were in the CACHE?
-  if (manifest.cache.includes(requestUrl) || (requestUrl === clientUrl)) {
+  if ((manifest.cache.indexOf(requestUrl) >= 0)  || (requestUrl === clientUrl)) {
     // If so, return the cached response.
     const cache = await caches.open(hash);
     return cache.match(requestUrl);
@@ -112,8 +115,8 @@ async function appCacheLogic(
   }
 
   // If CACHE and FALLBACK don't apply, try NETWORK.
-  if (manifest.network.includes(requestUrl) ||
-      manifest.network.includes('*')) {
+  if ((manifest.network.indexOf(requestUrl) >= 0) ||
+      (manifest.network.indexOf('*') >= 0)) {
     return fetch(event.request);
   }
 
@@ -169,144 +172,93 @@ async function noManifestBehavior(event: FetchEvent) {
   // multiple prefixes of the same length in different manifest, then
   // the one we access last wins. (This might not match browser behavior.)
   // See https://www.w3.org/TR/2011/WD-html5-20110525/offline.html#concept-appcache-matches-fallback
-  const manifestUrls = (await storage.get('ManifestURLToHashes') || {});
-  return idbHelpers[constants.STORES.MANIFEST_URL_TO_CONTENTS].getAllValues()
-    .then((manifests) => {
-      logHelper.log('All manifests:', manifests);
-      // Use .map() to create an array of the longest matching prefix
-      // for each manifest. If no prefixes match for a given manifest,
-      // the value will be ''.
-      const longestForEach = manifests.map((manifestVersions) => {
-        // Use the latest version of a given manifest.
-        const parsedManifest =
-          manifestVersions[manifestVersions.length - 1].parsed;
-        return longestMatchingPrefix(
-          Object.keys(parsedManifest.fallback), event.request.url);
-      });
-      logHelper.log('longestForEach:', longestForEach);
+  const manifestURLToHashes: ManifestURLToHashes = (await storage.get('ManifestURLToHashes') || {});
 
-      // Next, find which of the longest matching prefixes from each
-      // manifest is the longest overall. Return both the index of the
-      // manifest in which that match appears and the prefix itself.
-      const longest = longestForEach.reduce((soFar, current, i) => {
-        if (current.length >= soFar.prefix.length) {
-          return {prefix: current, index: i};
-        }
+  let currentLongestPrefix = '';
+  let effectiveManifest: Manifest | undefined;
+  let cacheName = '';
 
-        return soFar;
-      }, {prefix: '', index: 0});
-      logHelper.log('longest:', longest);
+  for (const hashToManifest of Object.values(manifestURLToHashes)) {
+    const entries = [...hashToManifest.entries()];
+    const [hash, latestManifest] = entries[entries.length - 1];
 
-      // Now that we know the longest overall prefix, we'll use that
-      // to lookup the fallback URL value in the winning manifest.
-      const fallbackKey = longest.prefix;
-      logHelper.log('fallbackKey:', fallbackKey);
-      if (fallbackKey) {
-        const winningManifest = manifests[longest.index];
-        logHelper.log('winningManifest:', winningManifest);
-        const winningManifestVersion =
-          winningManifest[winningManifest.length - 1];
-        logHelper.log('winningManifestVersion:', winningManifestVersion);
-        const hash = winningManifestVersion.hash;
-        const parsedManifest = winningManifestVersion.parsed;
-        return fetchWithFallback(event.request,
-          parsedManifest.fallback[fallbackKey], hash);
-      }
+    // Create an array of the longest matching prefix for each manifest. If no
+    // prefixes match for a given manifest, the value will be ''.
+    const longestPrefix = longestMatchingPrefix(Object.keys(latestManifest.fallback), event.request.url);
+    if (longestPrefix && (longestPrefix.length >= currentLongestPrefix.length)) {
+      effectiveManifest = latestManifest;
+      currentLongestPrefix = longestPrefix;
+      cacheName = hash;
+    }
+  }
 
-      // If nothing matches, then just fetch().
-      logHelper.log('Nothing at all matches. Using fetch()');
-      return fetch(event.request);
-    });
+  // Lookup the fallback URL value in the winning manifest, assuming there is one.
+  if (effectiveManifest && currentLongestPrefix && cacheName) {
+    return fetchWithFallback(event.request, effectiveManifest.fallback[currentLongestPrefix], cacheName);
+  }
+
+  // If nothing matches, then just fetch().
+  return fetch(event.request);
 }
 
-/**
- * An attempt to mimic AppCache behavior, using the primitives available to
- * a service worker.
- *
- * @private
- * @param {FetchEvent} event
- * @return {Promise.<Response>}
- */
-function appCacheBehaviorForEvent(event) {
-  const requestUrl = new URL(event.request.url);
-  logHelper.log('Starting appCacheBehaviorForUrl for ' + requestUrl);
-
+async function appCacheBehaviorForEvent(event: FetchEvent) {
   // If this is a request that, as per the AppCache spec, should be handled
   // via a direct fetch(), then do that and bail early.
   if (event.request.headers.get('X-Use-Fetch') === 'true') {
-    logHelper.log('Using fetch() because X-Use-Fetch: true');
     return fetch(event.request);
   }
+
+  const requestUrl = new URL(event.request.url);
 
   // Appcache rules only apply to GETs & same-scheme requests.
-  if (event.request.method !== 'GET' ||
-      requestUrl.protocol !== location.protocol) {
-    logHelper.log(
-      'Using fetch() because AppCache does not apply to this request.');
+  if ((event.request.method !== 'GET') || (requestUrl.protocol !== location.protocol)) {
     return fetch(event.request);
   }
 
-  return getClientUrlForEvent(event).then((clientUrl) => {
-    logHelper.log('clientUrl is', clientUrl);
-    return idbHelpers[constants.STORES.PATH_TO_MANIFEST].get(clientUrl)
-      .then((manifestUrl) => {
-        logHelper.log('manifestUrl is', manifestUrl);
+  const clientUrl = await getClientUrlForEvent(event);
+  const pageURLToManifestURL: PageURLToManifestURL = (await storage.get('PageURLToManifestURL') || {});
+  const manifestUrl = pageURLToManifestURL[clientUrl];
 
-        if (manifestUrl) {
-          return manifestBehavior(event, manifestUrl, clientUrl);
-        }
+  if (manifestUrl) {
+    return manifestBehavior(event, manifestUrl, clientUrl);
+  }
 
-        logHelper.log('No matching manifest for client found.');
-        return noManifestBehavior(event);
-      });
-  });
+  return noManifestBehavior(event);
 }
 
-/**
- * Given a list of client ids that are still active, this:
- * 1. Gets a list of all the client ids in IndexedDB's CLIENT_ID_TO_HASH
- * 2. Filters them to remove the active ones
- * 3. Delete the inactive entries from IndexedDB's CLIENT_ID_TO_HASH
- * 4. For each inactive one, return the corresponding hash association.
- *
- * @private
- * @param {Array.<String>} idsOfActiveClients
- * @return {Promise.<Array.<String>>}
- */
-function cleanupClientIdAndHash(idsOfActiveClients) {
-  return idbHelpers[constants.STORES.CLIENT_ID_TO_HASH].getAllKeys()
-    .then((allKnownIds) => {
-      return allKnownIds.filter((id) => !idsOfActiveClients.includes(id));
-    }).then((idsOfInactiveClients) => {
-      return Promise.all(idsOfInactiveClients.map((id) => {
-        const storeName = constants.STORES.CLIENT_ID_TO_HASH;
-        return idbHelpers[storeName].get(id).then((hash) => {
-          return idbHelpers[constants.STORES.CLIENT_ID_TO_HASH].delete(id)
-            .then(() => hash);
-        });
-      }));
-    });
+async function cleanupClientIdAndHash(idsOfActiveClients: Array<string>) {
+  const inactiveHashes: Array<string> = [];
+
+  const clientIdToHash: ClientIdToHash = (await storage.get('ClientIdToHash') || {});
+
+  // We're going to be modifying clientIdToHash, so get a list of the original entries first.
+  const entries = [...Object.entries(clientIdToHash)];
+  for (const [clientId, hash] of entries) {
+    if (idsOfActiveClients.indexOf(clientId) === -1) {
+      delete clientIdToHash[clientId];
+      inactiveHashes.push(hash);
+    }
+  }
+
+  await storage.set('ClientIdToHash', clientIdToHash);
+
+  return inactiveHashes;
 }
 
-/**
- * Fulfills with an array of all the hash ids that correspond to outdated
- * manifest versions.
- *
- * @private
- * @return {Promise.<Array.<String>>}
- */
-function getHashesOfOlderVersions() {
-  return idbHelpers[constants.STORES.MANIFEST_URL_TO_CONTENTS].getAllValues()
-    .then((manifests) => {
-      return manifests.map((versions) => {
-        // versions.slice(0, -1) will give all the versions other than the
-        // last, or [] if there's aren't any older versions.
-        return versions.slice(0, -1).map((version) => version.hash);
-      }).reduce((prev, curr) => {
-        // Flatten the array-of-arrays into an array.
-        return prev.concat(curr);
-      }, []);
-    });
+async function getHashesOfOlderVersions() {
+  const hashesOfOlderVersions: Set<string> = new Set();
+
+  const manifestURLToHashes: ManifestURLToHashes = (await storage.get('ManifestURLToHashes') || {});
+
+  for (const hashToManifest of Object.values(manifestURLToHashes)) {
+    const allHashes = [...hashToManifest.keys()];
+    // We want to iterate over everything other than the last key.
+    for (const hash of allHashes.slice(0, allHashes.length - 1)) {
+      hashesOfOlderVersions.add(hash);
+    }
+  }
+
+  return hashesOfOlderVersions;
 }
 
 /**
@@ -318,26 +270,14 @@ function getHashesOfOlderVersions() {
  *    that correspond to out-of-date manifest versions.
  * 4. If there's a match between an out of date hash and a hash that is no
  *    longer being used by a client, then it deletes the corresponding cache.
- *
- * @private
  */
-function cleanupOldCaches() {
-  self.clients.matchAll().then((clients) => {
-    return clients.map((client) => client.id);
-  }).then((idsOfActiveClients) => {
-    return cleanupClientIdAndHash(idsOfActiveClients);
-  }).then((hashesNotInUse) => {
-    return getHashesOfOlderVersions().then((hashesOfOlderVersions) => {
-      return hashesOfOlderVersions.filter((hashOfOlderVersion) => {
-        return hashesNotInUse.includes(hashOfOlderVersion);
-      });
-    });
-  }).then((idsToDelete) => {
-    logHelper.log('deleting cache ids', idsToDelete);
-    return Promise.all(idsToDelete.map((cacheId) => caches.delete(cacheId)));
-  });
-
-  // TODO: Delete the entry in the array stored in MANIFEST_URL_TO_CONTENT.
+async function cleanupOldCaches() {
+  const activeClients = await self.clients.matchAll();
+  const idsOfActiveClients = activeClients.map((client) => client.id);
+  const hashesNotInUse = await cleanupClientIdAndHash(idsOfActiveClients);
+  const hashesOfOlderVersions = await getHashesOfOlderVersions();
+  const hashesToDelete = [...hashesOfOlderVersions].filter((hash) => hashesNotInUse.includes(hash));
+  await Promise.all(hashesToDelete.map((hash) => caches.delete(hash)));
 }
 
 /**
@@ -402,24 +342,16 @@ function cleanupOldCaches() {
  *   }
  * });
  * ```
- *
- * @alias goog.appCacheBehavior.fetch
- * @param {FetchEvent} event
- * @return {Promise.<Response>}
  */
-function fetchBehavior(event) {
-  logHelper.log('client id is', event.clientId);
-  return appCacheBehaviorForEvent(event).then((response) => {
-    // If this is a navigation, clean up unused caches that correspond to old
-    // AppCache manifest versions which are no longer associated with an
-    // active client. This will be done asynchronously, and won't block the
-    // response from being returned to the onfetch handler.
-    if (event.request.mode === 'navigate') {
-      cleanupOldCaches();
-    }
+export async function handle(event: FetchEvent) {
+  const response = await appCacheBehaviorForEvent(event);
+  // If this is a navigation, clean up unused caches that correspond to old
+  // AppCache manifest versions which are no longer associated with an
+  // active client. This will be done asynchronously, and won't block the
+  // response from being returned to the onfetch handler.
+  if (event.request.mode === 'navigate') {
+    event.waitUntil(cleanupOldCaches());
+  }
 
-    return response;
-  });
+  return response;
 }
-
-export {fetchBehavior as fetch};

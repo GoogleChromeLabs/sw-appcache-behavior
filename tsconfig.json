@@ -1,8 +1,5 @@
 {
   "compilerOptions": {
-    "alwaysStrict": true,
-    "declaration": true,
-    "module": "esnext",
     "strict": true,
     "target": "esnext"
   }
