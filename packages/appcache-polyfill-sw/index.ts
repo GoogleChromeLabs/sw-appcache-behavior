@@ -28,26 +28,16 @@ import {
 } from '../../lib/interfaces';
 
 async function getClientUrlForEvent(event: FetchEvent) {
-  try {
-    // TODO: Figure out if this is the right precedence.
-    const effectiveClientId =
-      // Is replacesClientId implemented anywhere?
-      // event.replacesClientId ||
-      event.resultingClientId ||
-      event.clientId;
-    const client = await self.clients.get(effectiveClientId);
+  if (event.clientId) {
+    const client = await self.clients.get(event.clientId);
     return client.url;
-  } catch(e) {
-    // Firefox currently sets the referer to 'about:client' for initial
-    // navigations, but that's not useful for our purposes.
-    if (event.request.referrer && event.request.referrer !== 'about:client') {
-      return event.request.referrer;
-    }
+  }
 
-    // Use the event's request URL as the last resort, with the assumption
-    // that this is a navigation request and we can't detect it otherwise.
+  if (event.request.mode === 'navigate') {
     return event.request.url;
   }
+
+  return event.request.referrer;
 }
 
 async function getLatestManifestVersion(manifestUrl: string) {
@@ -261,6 +251,20 @@ async function getHashesOfOlderVersions() {
   return hashesOfOlderVersions;
 }
 
+async function removeUnusedHashAssociations(hashes: Array<string>) {
+  const manifestURLToHashes: ManifestURLToHashes = (await storage.get('ManifestURLToHashes') || {});
+
+  for (const hashToManifest of Object.values(manifestURLToHashes)) {
+    for (const hash of Object.keys(hashToManifest)) {
+      if (hashes.includes(hash)) {
+        hashToManifest.delete(hash);
+      }
+    }
+  }
+
+  await storage.set('ManifestURLToHashes', manifestURLToHashes);
+}
+
 /**
  * Does the following:
  * 1. Gets a list of all client ids associated with this service worker.
@@ -271,78 +275,20 @@ async function getHashesOfOlderVersions() {
  * 4. If there's a match between an out of date hash and a hash that is no
  *    longer being used by a client, then it deletes the corresponding cache.
  */
-async function cleanupOldCaches() {
+async function cleanup() {
   const activeClients = await self.clients.matchAll();
   const idsOfActiveClients = activeClients.map((client) => client.id);
   const hashesNotInUse = await cleanupClientIdAndHash(idsOfActiveClients);
   const hashesOfOlderVersions = await getHashesOfOlderVersions();
   const hashesToDelete = [...hashesOfOlderVersions].filter((hash) => hashesNotInUse.includes(hash));
+
+  // Now that we know what hashes are no longer used, cleanup two things:
+  // Delete the IndexedDB associations:
+  await removeUnusedHashAssociations(hashesToDelete);
+  // Delete the Cache Storage entries:
   await Promise.all(hashesToDelete.map((hash) => caches.delete(hash)));
 }
 
-/**
- * `goog.appCacheBehavior.fetch` is the main entry point to the library
- * from within service worker code.
- *
- * The goal of the library is to provide equivalent behavior to AppCache
- * whenever possible. The one difference in how this library behaves compared to
- * a native AppCache implementation is that its client-side code will attempt to
- * fetch a fresh AppCache manifest once any cached version is older than 24
- * hours. This works around a
- * [major pitfall](http://alistapart.com/article/application-cache-is-a-douchebag#section6)
- * in the native AppCache implementation.
- *
- * **Important**
- * In addition to calling `goog.appCacheBehavior.fetch()` from within your
- * service worker, you *must* add the following to each HTML document that
- * contains an App Cache Manifest:
- *
- * ```html
- * <script src="path/to/client-runtime.js"
- *         data-service-worker="service-worker.js">
- * </script>
- * ```
- *
- * (The `data-service-worker` attribute is optional. If provided, it will
- * automatically call
- * [`navigator.serviceWorker.register()`](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/register)
- * for you.)
- *
- * Once you've added `<script src="path/to/client-runtime.js"></script>` to
- * your HTML pages, you can use `goog.appCacheBehavior.fetch` within your
- * service worker script to get a `Response` suitable for passing to
- * [`FetchEvent.respondWidth()`](https://developer.mozilla.org/en-US/docs/Web/API/FetchEvent/respondWith):
- *
- * ```js
- * // Import the library into the service worker global scope:
- * // https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/importScripts
- * importScripts('path/to/appcache-behavior-import.js');
- *
- * self.addEventListener('fetch', event => {
- *   event.respondWith(goog.appCacheBehavior.fetch(event).catch(error => {
- *     // Fallback behavior goes here, e.g. return fetch(event.request);
- *   }));
- * });
- * ```
- *
- * `goog.appCacheBehavior.fetch()` can be selectively applied to only a subset
- * of requests, to aid in the migration off of App Cache and onto a more
- * robust service worker implementation:
- *
- * ```js
- * // Import the library into the service worker global scope:
- * // https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/importScripts
- * importScripts('path/to/appcache-behavior-import.js');
- *
- * self.addEventListener('fetch', event => {
- *   if (event.request.url.match(/legacyRegex/)) {
- *     event.respondWith(goog.appCacheBehavior.fetch(event));
- *   } else {
- *     event.respondWith(goog.appCacheBehavior.fetch(event));
- *   }
- * });
- * ```
- */
 export async function handle(event: FetchEvent) {
   const response = await appCacheBehaviorForEvent(event);
   // If this is a navigation, clean up unused caches that correspond to old
@@ -350,7 +296,7 @@ export async function handle(event: FetchEvent) {
   // active client. This will be done asynchronously, and won't block the
   // response from being returned to the onfetch handler.
   if (event.request.mode === 'navigate') {
-    event.waitUntil(cleanupOldCaches());
+    event.waitUntil(cleanup());
   }
 
   return response;

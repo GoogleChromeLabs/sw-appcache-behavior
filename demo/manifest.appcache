@@ -1,9 +1,9 @@
 CACHE MANIFEST
-# v2
+# v4
 
 CACHE:
 common.css
-../dist/window-runtime.js
+../packages/appcache-polyfill-window/build/index.js
 
 NETWORK:
 *

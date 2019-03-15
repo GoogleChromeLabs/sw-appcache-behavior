@@ -5,6 +5,9 @@
   </head>
   <body>
     <p>I might be served from the cache.</p>
-    <script src="../dist/window-runtime.js"></script>
+    <script src="../packages/appcache-polyfill-window/build/index.js"></script>
+    <script>
+      navigator.serviceWorker.register('service-worker.js');
+    </script>
   </body>
 </html>

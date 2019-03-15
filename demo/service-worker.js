@@ -1,8 +1,5 @@
-/* eslint-env worker, serviceworker */
-/* global goog */
-
-importScripts('../build/appcache-behavior-import.js');
+importScripts('../packages/appcache-polyfill-sw/build/index.js');
 
 self.addEventListener('fetch', (event) => {
-  event.respondWith(goog.appCacheBehavior.fetch(event));
+  event.respondWith(appcachePolyfill.handle(event));
 });

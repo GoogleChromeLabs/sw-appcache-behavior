@@ -22,13 +22,13 @@
   "homepage": "https://github.com/googlechromelabs/sw-appcache-behavior/",
   "devDependencies": {
     "idb-keyval": "^3.1.0",
-    "lerna": "^3.11.1",
+    "lerna": "^3.13.1",
     "rimraf": "^2.6.3",
-    "rollup": "^1.1.2",
-    "rollup-plugin-node-resolve": "^4.0.0",
-    "rollup-plugin-typescript2": "^0.19.2",
+    "rollup": "^1.6.0",
+    "rollup-plugin-node-resolve": "^4.0.1",
+    "rollup-plugin-typescript2": "^0.20.1",
     "types-serviceworker": "0.0.1",
-    "typescript": "^3.3.1"
+    "typescript": "^3.3.3333"
   },
   "scripts": {
     "build": "npm run clean && rollup --config",
