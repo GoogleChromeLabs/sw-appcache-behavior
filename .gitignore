@@ -1,4 +1,4 @@
-.rpt2_cache/
-.rts2_cache_cjs/
+.rpt2_cache*/
+.rts2_cache*/
 node_modules/
 packages/*/build/

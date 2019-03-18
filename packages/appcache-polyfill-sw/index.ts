@@ -13,7 +13,7 @@
  limitations under the License.
 */
 
-/// <reference lib="esnext" />
+/// <reference types="types-serviceworker" />
 
 import * as storage from 'idb-keyval';
 
@@ -294,7 +294,7 @@ export async function handle(event: FetchEvent) {
   // If this is a navigation, clean up unused caches that correspond to old
   // AppCache manifest versions which are no longer associated with an
   // active client. This will be done asynchronously, and won't block the
-  // response from being returned to the onfetch handler.
+  // response from being returned to the fetch handler.
   if (event.request.mode === 'navigate') {
     event.waitUntil(cleanup());
   }

@@ -13,6 +13,8 @@
  limitations under the License.
 */
 
+/// <reference lib="dom" />
+
 import * as storage from 'idb-keyval';
 
 import {getHash} from '../../lib/getHash';
