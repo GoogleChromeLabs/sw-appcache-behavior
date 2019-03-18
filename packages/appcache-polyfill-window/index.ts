@@ -13,10 +13,9 @@
  limitations under the License.
 */
 
-import * as storage from 'idb-keyval';
-
 import {getHash} from '../../lib/getHash';
 import {parseManifest} from '../../lib/parseManifest';
+import * as storage from '../../lib/storageWithDefault';
 
 import {
   Manifest,
@@ -114,7 +113,7 @@ async function checkManifestVersion(manifestUrl: string) {
   const hash = await getHash(manifestUrl + manifestContents);
 
   const manifestURLToHashes: ManifestURLToHashes =
-      await storage.get('ManifestURLToHashes') || {};
+      await storage.get('ManifestURLToHashes');
   const hashesToManifest =
       manifestURLToHashes[manifestUrl] || new Map<string, Manifest>();
 
@@ -148,7 +147,7 @@ async function cacheManifestURLs(
   const urlsToCache = parsedManifest.cache.concat(fallbackUrls);
 
   const pageURLToManifestURL: PageURLToManifestURL =
-      await storage.get('PageURLToManifestURL') || {};
+      await storage.get('PageURLToManifestURL');
 
   for (const [pageURL, savedURL] of Object.entries(pageURLToManifestURL)) {
     if (currentManifestURL === savedURL) {
@@ -166,7 +165,7 @@ async function updateManifestAssociationForCurrentPage(
     hash: string
 ) {
   const pageURLToManifestURL: PageURLToManifestURL =
-      await storage.get('PageURLToManifestURL') || {};
+      await storage.get('PageURLToManifestURL');
   pageURLToManifestURL[location.href] = manifestUrl;
 
   await Promise.all([
