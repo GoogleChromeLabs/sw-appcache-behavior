@@ -173,3 +173,4 @@ async function updateManifestAssociationForCurrentPage(
 }
 
 init();
+

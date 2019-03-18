@@ -19,13 +19,6 @@
   "repository": "googlechromelabs/sw-appcache-behavior",
   "bugs": "https://github.com/googlechromelabs/sw-appcache-behavior/issues",
   "homepage": "https://github.com/googlechromelabs/sw-appcache-behavior/",
-  "main": "build/index.js",
-  "module": "build/index.mjs",
-  "source": "index.ts",
-  "scripts": {
-    "build": "microbundle"
-  },
-  "devDependencies": {
-    "microbundle": "^0.11.0"
-  }
+  "main": "build/index.umd.js",
+  "module": "build/index.esm.mjs"
 }
