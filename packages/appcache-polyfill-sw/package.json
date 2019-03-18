@@ -19,6 +19,5 @@
   "repository": "googlechromelabs/sw-appcache-behavior",
   "bugs": "https://github.com/googlechromelabs/sw-appcache-behavior/issues",
   "homepage": "https://github.com/googlechromelabs/sw-appcache-behavior/",
-  "main": "build/sw-appcache-behavior.umd.js",
-  "module": "build/sw-appcache-behavior.mjs"
+  "main": "build/index.umd.js"
 }

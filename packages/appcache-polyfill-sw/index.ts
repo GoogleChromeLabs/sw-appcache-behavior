@@ -13,7 +13,8 @@
  limitations under the License.
 */
 
-/// <reference types="types-serviceworker" />
+/// <reference lib="webworker" />
+declare var self: ServiceWorkerGlobalScope;
 
 import * as storage from 'idb-keyval';
 
