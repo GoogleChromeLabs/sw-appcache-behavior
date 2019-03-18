@@ -4,13 +4,15 @@ module.exports = {
     ecmaVersion: 2019,
     sourceType: 'module',
   },
-  extends: ['eslint:recommended'],
+  extends: ['eslint:recommended', 'google'],
   env: {
     es6: true,
   },
   rules: {
     // See https://github.com/eslint/typescript-eslint-parser/issues/457
     'no-unused-vars': ['off'],
+    'require-jsdoc': ['off'],
+    'spaced-comment': ['off'],
   },
   overrides: [{
     files: ['lib/**'],

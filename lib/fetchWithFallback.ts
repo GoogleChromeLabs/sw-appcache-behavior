@@ -1,7 +1,7 @@
 export async function fetchWithFallback(
-  request: Request,
-  fallbackUrl: string,
-  cacheName: string
+    request: Request,
+    fallbackUrl: string,
+    cacheName: string
 ) {
   try {
     const response = await fetch(request);
@@ -13,7 +13,7 @@ export async function fetchWithFallback(
     }
 
     return response;
-  } catch(e) {
+  } catch (e) {
     const cache = await caches.open(cacheName);
     return cache.match(fallbackUrl);
   }

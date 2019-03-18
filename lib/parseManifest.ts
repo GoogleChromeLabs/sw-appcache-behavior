@@ -1,8 +1,8 @@
 import {Manifest} from './interfaces';
 
 export function parseManifest(
-  rawManifest: string,
-  baseUrl: string = location.href
+    rawManifest: string,
+    baseUrl: string = location.href
 ) {
   const manifest: Manifest = {
     cache: [],
@@ -37,7 +37,7 @@ export function parseManifest(
 
     if (currentMode === 'fallback') {
       const [key, value] = line.split(/\s+/, 2).map(
-        (url) => (new URL(url, baseUrl)).href);
+          (url) => (new URL(url, baseUrl)).href);
       manifest.fallback[key] = value;
     } else {
       if (currentMode === 'network' && line === '*') {

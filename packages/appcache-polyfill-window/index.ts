@@ -13,8 +13,6 @@
  limitations under the License.
 */
 
-/// <reference lib="dom" />
-
 import * as storage from 'idb-keyval';
 
 import {getHash} from '../../lib/getHash';
@@ -23,9 +21,8 @@ import {parseManifest} from '../../lib/parseManifest';
 import {
   Manifest,
   ManifestURLToHashes,
-  PageURLToManifestURL
+  PageURLToManifestURL,
 } from '../../lib/interfaces';
-import { isPromiseAlike } from 'q';
 
 async function init() {
   const manifestAttribute = document.documentElement.getAttribute('manifest');
@@ -115,9 +112,11 @@ async function checkManifestVersion(manifestUrl: string) {
 
   const manifestContents = await manifestResponse.text();
   const hash = await getHash(manifestUrl + manifestContents);
-  
-  const manifestURLToHashes: ManifestURLToHashes = await storage.get('ManifestURLToHashes') || {};
-  const hashesToManifest = manifestURLToHashes[manifestUrl] || new Map<string, Manifest>();
+
+  const manifestURLToHashes: ManifestURLToHashes =
+      await storage.get('ManifestURLToHashes') || {};
+  const hashesToManifest =
+      manifestURLToHashes[manifestUrl] || new Map<string, Manifest>();
 
   // If we already have an entry for this version of the manifest, we can
   // return without updating anything.
@@ -141,17 +140,18 @@ async function checkManifestVersion(manifestUrl: string) {
 }
 
 async function cacheManifestURLs(
-  currentManifestURL: string,
-  hash: string,
-  parsedManifest: Manifest
+    currentManifestURL: string,
+    hash: string,
+    parsedManifest: Manifest
 ) {
   const fallbackUrls = Object.values(parsedManifest.fallback);
   const urlsToCache = parsedManifest.cache.concat(fallbackUrls);
 
-  const pageURLToManifestURL: PageURLToManifestURL = await storage.get('PageURLToManifestURL') || {};
+  const pageURLToManifestURL: PageURLToManifestURL =
+      await storage.get('PageURLToManifestURL') || {};
 
-  for (const [pageURL, savedManifestURL] of Object.entries(pageURLToManifestURL)) {
-    if (currentManifestURL === savedManifestURL) {
+  for (const [pageURL, savedURL] of Object.entries(pageURLToManifestURL)) {
+    if (currentManifestURL === savedURL) {
       urlsToCache.push(pageURL);
     }
   }
@@ -162,10 +162,11 @@ async function cacheManifestURLs(
 }
 
 async function updateManifestAssociationForCurrentPage(
-  manifestUrl: string,
-  hash: string
+    manifestUrl: string,
+    hash: string
 ) {
-  const pageURLToManifestURL: PageURLToManifestURL = await storage.get('PageURLToManifestURL') || {};
+  const pageURLToManifestURL: PageURLToManifestURL =
+      await storage.get('PageURLToManifestURL') || {};
   pageURLToManifestURL[location.href] = manifestUrl;
 
   await Promise.all([
