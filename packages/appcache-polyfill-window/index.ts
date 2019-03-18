@@ -25,6 +25,7 @@ import {
   ManifestURLToHashes,
   PageURLToManifestURL
 } from '../../lib/interfaces';
+import { isPromiseAlike } from 'q';
 
 async function init() {
   const manifestAttribute = document.documentElement.getAttribute('manifest');
@@ -58,7 +59,8 @@ async function addToCache(hash: string, urls: Array<string>) {
       }
 
       if (response.status === 200) {
-        return await cache.put(url, response);
+        await cache.put(url, response);
+        return;
       }
 
       // See Item 18.5 of https://html.spec.whatwg.org/multipage/browsers.html#downloading-or-updating-an-application-cache
@@ -114,7 +116,7 @@ async function checkManifestVersion(manifestUrl: string) {
   const manifestContents = await manifestResponse.text();
   const hash = await getHash(manifestUrl + manifestContents);
   
-  const manifestURLToHashes: ManifestURLToHashes = (await storage.get('ManifestURLToHashes') || {});
+  const manifestURLToHashes: ManifestURLToHashes = await storage.get('ManifestURLToHashes') || {};
   const hashesToManifest = manifestURLToHashes[manifestUrl] || new Map<string, Manifest>();
 
   // If we already have an entry for this version of the manifest, we can
@@ -146,7 +148,7 @@ async function cacheManifestURLs(
   const fallbackUrls = Object.values(parsedManifest.fallback);
   const urlsToCache = parsedManifest.cache.concat(fallbackUrls);
 
-  const pageURLToManifestURL: PageURLToManifestURL = (await storage.get('PageURLToManifestURL') || {});
+  const pageURLToManifestURL: PageURLToManifestURL = await storage.get('PageURLToManifestURL') || {};
 
   for (const [pageURL, savedManifestURL] of Object.entries(pageURLToManifestURL)) {
     if (currentManifestURL === savedManifestURL) {
@@ -163,7 +165,7 @@ async function updateManifestAssociationForCurrentPage(
   manifestUrl: string,
   hash: string
 ) {
-  const pageURLToManifestURL: PageURLToManifestURL = (await storage.get('PageURLToManifestURL') || {});
+  const pageURLToManifestURL: PageURLToManifestURL = await storage.get('PageURLToManifestURL') || {};
   pageURLToManifestURL[location.href] = manifestUrl;
 
   await Promise.all([
