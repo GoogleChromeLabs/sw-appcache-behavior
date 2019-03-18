@@ -59,7 +59,7 @@ async function getLatestManifestVersion(manifestUrl: string) {
 }
 
 async function getManifestWithHash(manifestUrl: string, hash: string) {
-  const manifestURLToHashes: ManifestURLToHashes = (await storage.get('ManifestURLToHashes') || {});
+  const manifestURLToHashes: ManifestURLToHashes = await storage.get('ManifestURLToHashes') || {};
 
   const hashToManifest = manifestURLToHashes[manifestUrl];
   if (!hashToManifest) {
@@ -71,7 +71,7 @@ async function getManifestWithHash(manifestUrl: string, hash: string) {
 
 async function saveClientIdAndHash(clientId: string, hash: string) {
   if (clientId) {
-    const clientIdToHash: ClientIdToHash = (await storage.get('ClientIdToHash') || {});
+    const clientIdToHash: ClientIdToHash = await storage.get('ClientIdToHash') || {};
     clientIdToHash[clientId] = hash;
     await storage.set('ClientIdToHash', clientIdToHash);
   }
@@ -121,7 +121,7 @@ async function manifestBehavior(
   clientUrl: string
 ) {
   if (event.clientId) {
-    const clientIdToHash: ClientIdToHash = (await storage.get('ClientIdToHash') || {});
+    const clientIdToHash: ClientIdToHash = await storage.get('ClientIdToHash') || {};
     const hash = clientIdToHash[event.clientId];
 
     // If we already have a hash assigned to this client id, use the associated
@@ -163,7 +163,7 @@ async function noManifestBehavior(event: FetchEvent) {
   // multiple prefixes of the same length in different manifest, then
   // the one we access last wins. (This might not match browser behavior.)
   // See https://www.w3.org/TR/2011/WD-html5-20110525/offline.html#concept-appcache-matches-fallback
-  const manifestURLToHashes: ManifestURLToHashes = (await storage.get('ManifestURLToHashes') || {});
+  const manifestURLToHashes: ManifestURLToHashes = await storage.get('ManifestURLToHashes') || {};
 
   let currentLongestPrefix = '';
   let effectiveManifest: Manifest | undefined;
@@ -207,7 +207,7 @@ async function appCacheBehaviorForEvent(event: FetchEvent) {
   }
 
   const clientUrl = await getClientUrlForEvent(event);
-  const pageURLToManifestURL: PageURLToManifestURL = (await storage.get('PageURLToManifestURL') || {});
+  const pageURLToManifestURL: PageURLToManifestURL = await storage.get('PageURLToManifestURL') || {};
   const manifestUrl = pageURLToManifestURL[clientUrl];
 
   if (manifestUrl) {
@@ -220,7 +220,7 @@ async function appCacheBehaviorForEvent(event: FetchEvent) {
 async function cleanupClientIdAndHash(idsOfActiveClients: Array<string>) {
   const inactiveHashes: Array<string> = [];
 
-  const clientIdToHash: ClientIdToHash = (await storage.get('ClientIdToHash') || {});
+  const clientIdToHash: ClientIdToHash = await storage.get('ClientIdToHash') || {};
 
   // We're going to be modifying clientIdToHash, so get a list of the original entries first.
   const entries = [...Object.entries(clientIdToHash)];
@@ -239,7 +239,7 @@ async function cleanupClientIdAndHash(idsOfActiveClients: Array<string>) {
 async function getHashesOfOlderVersions() {
   const hashesOfOlderVersions: Set<string> = new Set();
 
-  const manifestURLToHashes: ManifestURLToHashes = (await storage.get('ManifestURLToHashes') || {});
+  const manifestURLToHashes: ManifestURLToHashes = await storage.get('ManifestURLToHashes') || {};
 
   for (const hashToManifest of Object.values(manifestURLToHashes)) {
     const allHashes = [...hashToManifest.keys()];
@@ -253,7 +253,7 @@ async function getHashesOfOlderVersions() {
 }
 
 async function removeUnusedHashAssociations(hashes: Array<string>) {
-  const manifestURLToHashes: ManifestURLToHashes = (await storage.get('ManifestURLToHashes') || {});
+  const manifestURLToHashes: ManifestURLToHashes = await storage.get('ManifestURLToHashes') || {};
 
   for (const hashToManifest of Object.values(manifestURLToHashes)) {
     for (const hash of Object.keys(hashToManifest)) {

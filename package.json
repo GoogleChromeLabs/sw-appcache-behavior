@@ -21,6 +21,8 @@
   "bugs": "https://github.com/googlechromelabs/sw-appcache-behavior/issues",
   "homepage": "https://github.com/googlechromelabs/sw-appcache-behavior/",
   "devDependencies": {
+    "@typescript-eslint/parser": "^1.4.2",
+    "eslint": "^5.15.3",
     "idb-keyval": "^3.1.0",
     "lerna": "^3.13.1",
     "microbundle": "^0.11.0",
@@ -30,6 +32,7 @@
     "build-sw": "microbundle --entry=packages/appcache-polyfill-sw/index.ts --format=umd --name=appcachePolyfill --output=packages/appcache-polyfill-sw/build/",
     "build-window": "microbundle --entry=packages/appcache-polyfill-window/index.ts --format=es,umd --name=appcachePolyfill --output=packages/appcache-polyfill-window/build/",
     "build": "npm run clean && npm run build-sw && npm run build-window",
-    "clean": "rimraf packages/*/build"
+    "clean": "rimraf packages/*/build",
+    "lint": "eslint --ignore-path .gitignore lib/**/*.ts packages/**/*.ts"
   }
 }
