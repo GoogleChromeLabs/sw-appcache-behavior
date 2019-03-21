@@ -1,18 +1,18 @@
 const {expect} = require('chai');
 
-describe('sample test', function() {
+describe('End-to-End Tests', function() {
   let page;
   let context;
 
   before(async function() {
     context = await global.browser.createIncognitoBrowserContext();
     page = await global.browser.newPage();
-    page.on('console', (msg) => {
-      const color = msg.type === 'error' ?
-          '\x1b[31m%s\x1b[0m' :
-          '\x1b[36m%s\x1b[0m';
-      console.log(color, `${msg.text()}\n↪ [${msg.location().url}]\n`);
-    });
+    // page.on('console', (msg) => {
+    //   const color = msg.type === 'error' ?
+    //       '\x1b[31m%s\x1b[0m' :
+    //       '\x1b[36m%s\x1b[0m';
+    //   console.log(color, `${msg.text()}\n↪ [${msg.location().url}]\n`);
+    // });
 
     await page.goto(`${global.baseUrl}step1.html`);
     await page.evaluate(async () => {
@@ -32,8 +32,12 @@ describe('sample test', function() {
 
     const cacheEntries = await page.evaluate(async (expectedCacheName) => {
       const cache = await caches.open(expectedCacheName);
-      return cache.keys();
+      const keys = await cache.keys();
+      return keys.map((request) => request.url);
     }, expectedCacheName);
-    expect(cacheEntries).to.have.members([]);
+    expect(cacheEntries).to.have.members([
+      `${global.baseUrl}common.css`,
+      `${global.baseUrl}step1.html`,
+    ]);
   });
 });

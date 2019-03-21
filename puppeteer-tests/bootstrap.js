@@ -1,14 +1,14 @@
-const dhost = require('dhost');
-const polka = require('polka');
+const express = require('express');
 const puppeteer = require('puppeteer');
 
 const PORT = 8080;
 
-let polkaInstance;
+let server;
 
 before(async function() {
-  polkaInstance = polka();
-  polkaInstance.use(dhost()).listen(PORT);
+  app = express();
+  app.use(express.static('.'));
+  server = app.listen(PORT);
 
   global.baseUrl = `http://localhost:${PORT}/puppeteer-tests/static/`;
   global.browser = await puppeteer.launch({
@@ -19,5 +19,5 @@ before(async function() {
 
 after(function() {
   global.browser.close();
-  polkaInstance.server.close();
+  server.close();
 });
