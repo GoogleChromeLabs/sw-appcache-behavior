@@ -2,10 +2,9 @@
 function hexString(buffer: ArrayBuffer) {
   const byteArray = new Uint8Array(buffer);
 
-  return [...byteArray].map((value) => {
+  return Array.from(byteArray).map((value) => {
     const hexCode = value.toString(16);
-    const paddedHexCode = hexCode.padStart(2, '0');
-    return paddedHexCode;
+    return hexCode.padStart(2, '0');
   }).join('');
 }
 

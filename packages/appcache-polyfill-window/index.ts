@@ -23,7 +23,7 @@ import {
   PageURLToManifestURL,
 } from '../../lib/interfaces';
 
-async function init() {
+export async function init() {
   const manifestAttribute = document.documentElement.getAttribute('manifest');
   if (manifestAttribute && 'serviceWorker' in navigator) {
     const manifestUrl = (new URL(manifestAttribute, location.href)).href;
@@ -173,6 +173,3 @@ async function updateManifestAssociationForCurrentPage(
     addToCache(hash, [location.href]),
   ]);
 }
-
-init();
-
