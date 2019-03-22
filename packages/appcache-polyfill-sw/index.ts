@@ -26,6 +26,7 @@ import {
   ManifestURLToHashes,
   PageURLToManifestURL,
 } from '../../lib/interfaces';
+import { format } from 'url';
 
 async function getClientUrlForEvent(event: FetchEvent) {
   if (event.clientId) {
@@ -52,7 +53,7 @@ async function getLatestManifestVersion(manifestUrl: string) {
     return;
   }
 
-  const hashes = [...hashesToManifest.keys()];
+  const hashes = Array.from(hashesToManifest.keys());
   // Map objects preserve the ordering of insertion, so the last key will be the
   // most recent hash.
   return hashes[hashes.length - 1];
@@ -172,7 +173,7 @@ async function noManifestBehavior(event: FetchEvent) {
   let cacheName = '';
 
   for (const hashToManifest of Object.values(manifestURLToHashes)) {
-    const entries = [...hashToManifest.entries()];
+    const entries = Array.from(hashToManifest.entries());
     const [hash, latestManifest] = entries[entries.length - 1];
 
     // Create an array of the longest matching prefix for each manifest. If no
@@ -234,7 +235,7 @@ async function cleanupClientIdAndHash(idsOfActiveClients: Array<string>) {
 
   // We're going to be modifying clientIdToHash, so get a list of the original
   // entries first.
-  const entries = [...Object.entries(clientIdToHash)];
+  const entries = Object.entries(clientIdToHash);
   for (const [clientId, hash] of entries) {
     if (idsOfActiveClients.indexOf(clientId) === -1) {
       delete clientIdToHash[clientId];
@@ -254,7 +255,7 @@ async function getHashesOfOlderVersions() {
       await storage.get('ManifestURLToHashes');
 
   for (const hashToManifest of Object.values(manifestURLToHashes)) {
-    const allHashes = [...hashToManifest.keys()];
+    const allHashes = Array.from(hashToManifest.keys());
     // We want to iterate over everything other than the last key.
     for (const hash of allHashes.slice(0, allHashes.length - 1)) {
       hashesOfOlderVersions.add(hash);
@@ -294,7 +295,7 @@ async function cleanup() {
   const idsOfActiveClients = activeClients.map((client) => client.id);
   const hashesNotInUse = await cleanupClientIdAndHash(idsOfActiveClients);
   const hashesOfOlderVersions = await getHashesOfOlderVersions();
-  const hashesToDelete = [...hashesOfOlderVersions].filter(
+  const hashesToDelete = Array.from(hashesOfOlderVersions).filter(
       (hash) => hashesNotInUse.includes(hash));
 
   // Now that we know what hashes are no longer used, cleanup two things:
