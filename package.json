@@ -23,6 +23,7 @@
   "devDependencies": {
     "@typescript-eslint/parser": "^1.4.2",
     "chai": "^4.2.0",
+    "ejs": "^2.6.1",
     "eslint": "^5.15.3",
     "eslint-config-google": "^0.12.0",
     "express": "^4.16.4",
@@ -39,6 +40,6 @@
     "build": "npm run clean && npm run build-sw && npm run build-window",
     "clean": "rimraf packages/*/build",
     "lint": "eslint --ignore-path .gitignore lib/**/*.ts packages/**/*.ts",
-    "test": "mocha --recursive puppeteer-tests"
+    "test": "mocha puppeteer-tests"
   }
 }

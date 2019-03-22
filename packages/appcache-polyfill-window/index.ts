@@ -88,6 +88,18 @@ async function checkManifestVersion(manifestUrl: string) {
   const manifestRequest = new Request(manifestUrl, init);
 
   let manifestResponse = await fetch(manifestRequest);
+  // See Item 6 of https://html.spec.whatwg.org/multipage/offline.html#downloading-or-updating-an-application-cache
+  if (manifestResponse.status === 404 || manifestResponse.status === 410) {
+    // TODO: Implement the following:
+    // Mark cache group as obsolete. This cache group no longer exists for any purpose other than the processing of Document objects already associated with an application cache in the cache group.
+    throw new Error('Cache group obsolete');
+  }
+
+  // See https://html.spec.whatwg.org/multipage/offline.html#cache-failure-steps
+  if (manifestResponse.status !== 200) {
+    // TODO: Implement the following:
+    throw new Error('Cache failure.');
+  }
 
   const dateHeaderValue = manifestResponse.headers.get('date');
   if (dateHeaderValue) {

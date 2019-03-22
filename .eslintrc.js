@@ -36,6 +36,10 @@ module.exports = {
       browser: true,
       mocha: true,
       node: true,
+      serviceworker: true,
+    },
+    globals: {
+      appcachePolyfill: 'readonly',
     },
     rules: {
       'max-len': ['off'],
