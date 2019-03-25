@@ -91,7 +91,9 @@ async function checkManifestVersion(manifestUrl: string) {
   // See Item 6 of https://html.spec.whatwg.org/multipage/offline.html#downloading-or-updating-an-application-cache
   if (manifestResponse.status === 404 || manifestResponse.status === 410) {
     // TODO: Implement the following:
-    // Mark cache group as obsolete. This cache group no longer exists for any purpose other than the processing of Document objects already associated with an application cache in the cache group.
+    // Mark cache group as obsolete. This cache group no longer exists for any
+    // purpose other than the processing of Document objects already associated
+    // with an application cache in the cache group.
     throw new Error('Cache group obsolete');
   }
 

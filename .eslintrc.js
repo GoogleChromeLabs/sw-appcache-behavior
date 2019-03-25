@@ -8,11 +8,15 @@ module.exports = {
   env: {
     es6: true,
   },
+  plugins: [
+    'header',
+  ],
   rules: {
     // See https://github.com/eslint/typescript-eslint-parser/issues/457
     'no-unused-vars': ['off'],
     'require-jsdoc': ['off'],
     'spaced-comment': ['off'],
+    'header/header': [2, 'block', {pattern: 'Copyright \\d{4} Google Inc.'}],
   },
   overrides: [{
     files: ['lib/**'],

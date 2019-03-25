@@ -26,7 +26,6 @@ import {
   ManifestURLToHashes,
   PageURLToManifestURL,
 } from '../../lib/interfaces';
-import { format } from 'url';
 
 async function getClientUrlForEvent(event: FetchEvent) {
   if (event.clientId) {
