@@ -31,7 +31,7 @@ module.exports = {
       browser: true,
     },
   }, {
-    files: ['puppeteer-tests/**'],
+    files: ['tests/**'],
     env: {
       browser: true,
       mocha: true,

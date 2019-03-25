@@ -40,7 +40,7 @@
     "build": "npm run clean && npm run build-sw && npm run build-window",
     "clean": "rimraf packages/*/build",
     "lint": "eslint --ignore-path .gitignore lib/**/*.ts packages/**/*.ts",
-    "test": "mocha puppeteer-tests",
-    "test-server": "node puppeteer-tests/server.js"
+    "test": "mocha tests",
+    "test-server": "node tests/server.js"
   }
 }
