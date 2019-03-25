@@ -4,7 +4,7 @@ const path = require('path');
 const PORT = 8080;
 
 global.manifestVersion = 0;
-global.baseUrl = `http://localhost:${PORT}/puppeteer-tests/static/`;
+global.baseUrl = `http://localhost:${PORT}/tests/static/`;
 
 const app = express();
 

@@ -35,7 +35,7 @@ describe('End-to-End Tests', function() {
       await window.setupComplete;
     });
 
-    const expectedCacheName = '77ce9d3f83f948060a3ae0031f7ed56dc8438f659d6736dd46b33c6c7590b9bb';
+    const expectedCacheName = 'efe1a9f22297dec3101383dea9f670a4e38d32d86e2917702b0bee26d370d459';
 
     const caches = await page.evaluate(() => caches.keys());
     expect(caches).to.have.members([expectedCacheName]);
@@ -57,7 +57,7 @@ describe('End-to-End Tests', function() {
       await window.setupComplete;
     });
 
-    const expectedCacheName = '77ce9d3f83f948060a3ae0031f7ed56dc8438f659d6736dd46b33c6c7590b9bb';
+    const expectedCacheName = 'efe1a9f22297dec3101383dea9f670a4e38d32d86e2917702b0bee26d370d459';
 
     const caches = await page.evaluate(() => caches.keys());
     expect(caches).to.have.members([expectedCacheName]);
@@ -80,7 +80,7 @@ describe('End-to-End Tests', function() {
       await window.setupComplete;
     });
 
-    const expectedCacheName = '77ce9d3f83f948060a3ae0031f7ed56dc8438f659d6736dd46b33c6c7590b9bb';
+    const expectedCacheName = 'efe1a9f22297dec3101383dea9f670a4e38d32d86e2917702b0bee26d370d459';
 
     const caches = await page.evaluate(() => caches.keys());
     expect(caches).to.have.members([expectedCacheName]);
@@ -104,8 +104,8 @@ describe('End-to-End Tests', function() {
       await window.setupComplete;
     });
 
-    const oldCacheName = '77ce9d3f83f948060a3ae0031f7ed56dc8438f659d6736dd46b33c6c7590b9bb';
-    const newCacheName = 'dcd6e81823b2ca75e46833f31be4fcc129199c335e74d6335ca519389d100e14';
+    const oldCacheName = 'efe1a9f22297dec3101383dea9f670a4e38d32d86e2917702b0bee26d370d459';
+    const newCacheName = '3656ff69894c958b6be485f40a92f436b2aeabb3192ddff5159d97209f50feb8';
 
     const caches = await page.evaluate(() => caches.keys());
     expect(caches).to.have.members([oldCacheName, newCacheName]);
@@ -128,9 +128,9 @@ describe('End-to-End Tests', function() {
       await window.setupComplete;
     });
 
-    const oldCacheName1 = '77ce9d3f83f948060a3ae0031f7ed56dc8438f659d6736dd46b33c6c7590b9bb';
-    const oldCacheName2 = 'dcd6e81823b2ca75e46833f31be4fcc129199c335e74d6335ca519389d100e14';
-    const newCacheName = '4c0209fea7a7efd3d1cde60579e361ea06b4661735520a2be526b05a259d60ca';
+    const oldCacheName1 = 'efe1a9f22297dec3101383dea9f670a4e38d32d86e2917702b0bee26d370d459';
+    const oldCacheName2 = '3656ff69894c958b6be485f40a92f436b2aeabb3192ddff5159d97209f50feb8';
+    const newCacheName = '40468bed94b0c172081eb8f2e1e311a5a3e0ef25abe8358338f8fc905ce0cb08';
 
     const caches = await page.evaluate(() => caches.keys());
     expect(caches).to.have.members([oldCacheName1, oldCacheName2, newCacheName]);
