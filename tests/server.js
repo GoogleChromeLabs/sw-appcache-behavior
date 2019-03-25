@@ -16,14 +16,25 @@
 const express = require('express');
 const path = require('path');
 
+const RequestCounter = require('./RequestCounter');
+
 const PORT = 8080;
 
 global.manifestVersion = 0;
 global.baseUrl = `http://localhost:${PORT}/tests/static/`;
+global.requestCounter = new RequestCounter();
 
 const app = express();
 
-app.use(express.static(path.resolve(__dirname, '..')));
+app.use((req, res, next) => {
+  global.requestCounter.increment(req.url);
+  next();
+});
+
+app.use(express.static(path.resolve(__dirname, '..'), {
+  etag: false,
+  lastModified: false,
+}));
 
 app.set('views', path.join(__dirname, 'templates'));
 

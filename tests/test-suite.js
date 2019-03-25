@@ -38,6 +38,7 @@ describe('End-to-End Tests', function() {
 
   beforeEach(function() {
     global.manifestVersion = 1;
+    global.requestCounter.reset();
   });
 
   after(async function() {
