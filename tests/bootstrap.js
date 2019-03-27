@@ -15,7 +15,6 @@
 
 const puppeteer = require('puppeteer');
 
-const PORT = 8080;
 let server;
 
 before(async function() {
