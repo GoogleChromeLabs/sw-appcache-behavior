@@ -28,8 +28,17 @@ export async function init() {
   if (manifestAttribute && 'serviceWorker' in navigator) {
     const manifestUrl = (new URL(manifestAttribute, location.href)).href;
 
-    const hash = await checkManifestVersion(manifestUrl);
-    await updateManifestAssociationForCurrentPage(manifestUrl, hash);
+    try {
+      const hash = await checkManifestVersion(manifestUrl);
+      // hash might be null if the manifest was removed.
+      if (hash) {
+        await updateManifestAssociationForCurrentPage(manifestUrl, hash);
+      } else {
+        await removeManifestAssociations(manifestUrl);
+      }
+    } catch (error) {
+      console.error('Unable to update App Cache associations:', error);
+    }
   }
 }
 
@@ -90,17 +99,19 @@ async function checkManifestVersion(manifestUrl: string) {
   let manifestResponse = await fetch(manifestRequest);
   // See Item 6 of https://html.spec.whatwg.org/multipage/offline.html#downloading-or-updating-an-application-cache
   if (manifestResponse.status === 404 || manifestResponse.status === 410) {
-    // TODO: Implement the following:
-    // Mark cache group as obsolete. This cache group no longer exists for any
-    // purpose other than the processing of Document objects already associated
-    // with an application cache in the cache group.
-    throw new Error('Cache group obsolete');
+    // TODO: Double check that this is a reasonable approach.
+    // If the manifest has explicitly been removed, then remove our saved state
+    // related to that manifest, but don't delete anything from the
+    // Cache Storage API. Developers migrating off of App Cache and to a full
+    // service worker might find themselves in this state.
+    return null;
   }
 
   // See https://html.spec.whatwg.org/multipage/offline.html#cache-failure-steps
   if (manifestResponse.status !== 200) {
-    // TODO: Implement the following:
-    throw new Error('Cache failure.');
+    // TODO: Double check that this is a reasonable approach.
+    // For non-200/404/410 responses, just abort.
+    throw new Error('Manifest response status: ${manifestResponse.status}.');
   }
 
   const dateHeaderValue = manifestResponse.headers.get('date');
@@ -186,4 +197,26 @@ async function updateManifestAssociationForCurrentPage(
     storage.set('PageURLToManifestURL', pageURLToManifestURL),
     addToCache(hash, [location.href]),
   ]);
+}
+
+async function removeManifestAssociations(manifestUrlToRemove: string) {
+  const pageURLToManifestURL: PageURLToManifestURL =
+      await storage.get('PageURLToManifestURL');
+  for (const [pageUrl, manifestUrl] of Object.entries(pageURLToManifestURL)) {
+    if (manifestUrlToRemove === manifestUrl) {
+      delete pageURLToManifestURL[pageUrl];
+    }
+  }
+
+  const manifestURLToHashes: ManifestURLToHashes =
+      await storage.get('ManifestURLToHashes');
+
+  for (const manifestUrl of Object.keys(manifestURLToHashes)) {
+    if (manifestUrlToRemove === manifestUrl) {
+      delete manifestURLToHashes[manifestUrl];
+    }
+  }
+
+  await storage.set('PageURLToManifestURL', pageURLToManifestURL);
+  await storage.set('ManifestURLToHashes', manifestURLToHashes);
 }
