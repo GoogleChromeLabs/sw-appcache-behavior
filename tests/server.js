@@ -39,7 +39,7 @@ app.use(express.static(path.resolve(__dirname, '..'), {
 app.set('views', path.join(__dirname, 'templates'));
 
 app.get('/*.appcache', (req, res) => {
-  if (global.forceManifestStatus) {
+  if (global.forceManifestStatuss) {
     res.sendStatus(global.forceManifestStatus);
   } else {
     const manifestName = req.url.split('/').pop();

@@ -21,19 +21,21 @@
   "bugs": "https://github.com/googlechromelabs/sw-appcache-behavior/issues",
   "homepage": "https://github.com/googlechromelabs/sw-appcache-behavior/",
   "devDependencies": {
-    "@typescript-eslint/parser": "^1.4.2",
+    "@typescript-eslint/parser": "^1.10.2",
     "chai": "^4.2.0",
-    "ejs": "^2.6.1",
-    "eslint": "^5.15.3",
-    "eslint-config-google": "^0.12.0",
+    "ejs": "^2.6.2",
+    "eslint": "^5.16.0",
+    "eslint-config-google": "^0.13.0",
     "eslint-plugin-header": "^3.0.0",
-    "express": "^4.16.4",
-    "idb-keyval": "^3.1.0",
-    "lerna": "^3.13.1",
+    "express": "^4.17.1",
+    "idb-keyval": "^3.2.0",
+    "lerna": "^3.15.0",
     "microbundle": "^0.11.0",
-    "mocha": "^6.0.2",
-    "puppeteer": "^1.13.0",
-    "rimraf": "^2.6.3"
+    "mocha": "^6.1.4",
+    "puppeteer": "^1.17.0",
+    "puppeteer-firefox": "^0.5.0",
+    "rimraf": "^2.6.3",
+    "ua-parser-js": "^0.7.20"
   },
   "scripts": {
     "build-sw": "microbundle --entry=packages/appcache-polyfill-sw/index.ts --format=umd --name=appcachePolyfill --output=packages/appcache-polyfill-sw/build/",
@@ -41,7 +43,7 @@
     "build": "npm run clean && npm run build-sw && npm run build-window",
     "clean": "rimraf packages/*/build",
     "lint": "eslint --ignore-path .gitignore lib/*.ts packages/**/*.ts tests/*.js",
-    "test": "mocha tests",
+    "test": "mocha --delay tests/test-suite.js",
     "test-server": "node tests/server.js"
   }
 }
