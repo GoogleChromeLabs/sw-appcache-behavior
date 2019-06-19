@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html manifest="manifest1.appcache">
+  <head>
+    <meta charset="UTF-8">
+    <title>Step 1</title>
+    <link rel="stylesheet" href="common.css">
+    <link rel="icon" href="favicon.png">
+  </head>
+  <body>
+    <p>This is step 1.</p>
+
+    <script type="module">
+      import {init} from '../../packages/appcache-polyfill-window/build/index.mjs';
+      window.setupComplete = (async () => {
+        await init();
+        await navigator.serviceWorker.register('sw.js');
+      })();
+    </script>
+  </body>
+</html>
