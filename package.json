@@ -39,11 +39,11 @@
   },
   "scripts": {
     "build-sw": "microbundle --entry=packages/appcache-polyfill-sw/index.ts --format=umd --name=appcachePolyfill --output=packages/appcache-polyfill-sw/build/",
-    "build-window": "microbundle --entry=packages/appcache-polyfill-window/index.ts --format=es,umd --name=appcachePolyfill --output=packages/appcache-polyfill-window/build/",
+    "build-window": "microbundle --entry=packages/appcache-polyfill-window/index.ts --name=appcachePolyfill --output=packages/appcache-polyfill-window/build/",
     "build": "npm run clean && npm run build-sw && npm run build-window",
     "clean": "rimraf packages/*/build",
     "lint": "eslint --ignore-path .gitignore lib/*.ts packages/**/*.ts tests/*.js",
-    "test": "mocha --delay tests/test-suite.js",
+    "test": "npm run build && mocha --delay tests/test-suite.js",
     "test-server": "node tests/server.js"
   }
 }
