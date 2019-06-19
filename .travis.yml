@@ -1,4 +1,13 @@
 language: node_js
-node_js:
-  - 'node'
-cache: npm
+dist: trusty
+addons:
+  apt:
+    packages:
+      # This is required to run new chrome on old trusty
+      - libnss3
+cache:
+  directories:
+    - node_modules
+before_install:
+  # Enable user namespace cloning
+  - "sysctl kernel.unprivileged_userns_clone=1"
