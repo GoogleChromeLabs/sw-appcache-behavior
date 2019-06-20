@@ -193,7 +193,4 @@
   }
 
   run();
-})().catch((error) => {
-  // Explicitly throw when the async function's promise rejects.
-  throw error;
-});
+})().catch(() => process.exit(1));
