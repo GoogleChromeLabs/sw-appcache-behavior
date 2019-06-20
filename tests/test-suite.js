@@ -13,13 +13,13 @@
  limitations under the License.
 */
 
-const {expect} = require('chai');
-const puppeteerChrome = require('puppeteer');
-const puppeteerFirefox = require('puppeteer-firefox');
-const UAParser = require('ua-parser-js');
-
 // See https://mochajs.org/#delayed-root-suite
 (async () => {
+  const {expect} = require('chai');
+  const puppeteerChrome = require('puppeteer');
+  const puppeteerFirefox = require('puppeteer-firefox');
+  const UAParser = require('ua-parser-js');
+
   const browserToUserAgentMapping = new Map();
   for (const puppeteer of [puppeteerChrome, puppeteerFirefox]) {
     const browser = await puppeteer.launch({
