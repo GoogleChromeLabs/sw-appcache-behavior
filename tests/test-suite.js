@@ -193,4 +193,7 @@ const UAParser = require('ua-parser-js');
   }
 
   run();
-})();
+})().catch((error) => {
+  // Explicitly throw when the async function's promise rejects.
+  throw error;
+});
