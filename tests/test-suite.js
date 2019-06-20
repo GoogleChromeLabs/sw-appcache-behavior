@@ -22,10 +22,12 @@
 
   const browserToUserAgentMapping = new Map();
   for (const puppeteer of [puppeteerChrome, puppeteerFirefox]) {
-    const browser = await puppeteer.launch({
-      devtools: true,
-      headless: false,
-    });
+    // Disable devtools and enable headless when we're in the CI environment.
+    const config = {
+      devtools: process.env.CI !== 'true',
+      headless: process.env.CI === 'true',
+    };
+    const browser = await puppeteer.launch(config);
 
     const userAgentString = await browser.userAgent();
     const uaParser = new UAParser(userAgentString);
@@ -193,4 +195,7 @@
   }
 
   run();
-})().catch(() => process.exit(1));
+})().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
