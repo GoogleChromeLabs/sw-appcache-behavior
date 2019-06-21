@@ -32,7 +32,7 @@
     "lerna": "^3.15.0",
     "microbundle": "^0.11.0",
     "mocha": "^6.1.4",
-    "puppeteer": "^1.17.0",
+    "puppeteer": "^1.18.0",
     "puppeteer-firefox": "^0.5.0",
     "rimraf": "^2.6.3",
     "ua-parser-js": "^0.7.20"
