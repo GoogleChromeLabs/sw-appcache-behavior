@@ -5,6 +5,8 @@ A pair of modules meant to ease the transition
 and on to
 [service workers](https://developers.google.com/web/fundamentals/primers/service-workers/).
 
+Note: These libraries attempt to replicate the caching and serving behavior that AppCache offers, but does **not** include equivalents to the [`window.applicationCache` interface](https://developer.mozilla.org/en-US/docs/Web/API/Window/applicationCache), nor the related events that AppCache would fire in the `window` context.
+
 ## Installation
 
 There are two modules to install: one that is used from within the `window`
