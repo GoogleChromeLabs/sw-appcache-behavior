@@ -37,3 +37,7 @@ export interface PageURLToManifestURL {
 export interface ClientIdToHash {
   [key: string]: string,
 }
+
+export interface CachePopulatedCallback {
+  (urlsCached: Array<string>): void;
+}
