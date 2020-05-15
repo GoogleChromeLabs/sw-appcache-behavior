@@ -67,7 +67,6 @@
 
       beforeEach(function() {
         global.manifestVersion = 1;
-        global.requestCounter.reset();
       });
 
       after(async function() {
