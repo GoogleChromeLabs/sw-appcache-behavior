@@ -16,20 +16,11 @@
 const express = require('express');
 const path = require('path');
 
-const RequestCounter = require('./RequestCounter');
-
 const PORT = 8080;
 
 global.baseUrl = `http://localhost:${PORT}/tests/static/`;
 global.manifestVersion = 0;
-global.requestCounter = new RequestCounter();
-
 const app = express();
-
-app.use((req, res, next) => {
-  global.requestCounter.increment(req.url);
-  next();
-});
 
 app.use(express.static(path.resolve(__dirname, '..'), {
   etag: false,
@@ -39,7 +30,7 @@ app.use(express.static(path.resolve(__dirname, '..'), {
 app.set('views', path.join(__dirname, 'templates'));
 
 app.get('/*.appcache', (req, res) => {
-  if (global.forceManifestStatuss) {
+  if (global.forceManifestStatus) {
     res.sendStatus(global.forceManifestStatus);
   } else {
     const manifestName = req.url.split('/').pop();

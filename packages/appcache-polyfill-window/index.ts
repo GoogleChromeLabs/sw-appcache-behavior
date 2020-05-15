@@ -18,12 +18,21 @@ import {parseManifest} from '../../lib/parseManifest';
 import * as storage from '../../lib/storageWithDefault';
 
 import {
+  CachePopulatedCallback,
   Manifest,
   ManifestURLToHashes,
   PageURLToManifestURL,
 } from '../../lib/interfaces';
 
-export async function init() {
+let allUrlsCached: Set<string>;
+
+export async function init(config: {
+  cachePopulatedCallback?: CachePopulatedCallback,
+} = {}) {
+  // Reset allUrlsCached each time init() is called, to ensure that
+  // cachePopulatedCallback is only invoked with the most recent updates.
+  allUrlsCached = new Set();
+
   const manifestAttribute = document.documentElement.getAttribute('manifest');
   if (manifestAttribute && 'serviceWorker' in navigator) {
     const manifestUrl = (new URL(manifestAttribute, location.href)).href;
@@ -35,6 +44,10 @@ export async function init() {
         await updateManifestAssociationForCurrentPage(manifestUrl, hash);
       } else {
         await removeManifestAssociations(manifestUrl);
+      }
+
+      if (config.cachePopulatedCallback) {
+        config.cachePopulatedCallback(Array.from(allUrlsCached));
       }
     } catch (error) {
       console.error('Unable to update App Cache associations:', error);
@@ -64,7 +77,8 @@ async function addToCache(hash: string, urls: Array<string>) {
       }
 
       if (response.status === 200) {
-        await cache.put(url, response);
+        await cache.put(request, response);
+        allUrlsCached.add(request.url);
         return;
       }
 
@@ -166,7 +180,7 @@ async function checkManifestVersion(manifestUrl: string) {
 async function cacheManifestURLs(
     currentManifestURL: string,
     hash: string,
-    parsedManifest: Manifest
+    parsedManifest: Manifest,
 ) {
   const fallbackUrls = Object.values(parsedManifest.fallback);
   const urlsToCache = parsedManifest.cache.concat(fallbackUrls);
@@ -187,7 +201,7 @@ async function cacheManifestURLs(
 
 async function updateManifestAssociationForCurrentPage(
     manifestUrl: string,
-    hash: string
+    hash: string,
 ) {
   const pageURLToManifestURL: PageURLToManifestURL =
       await storage.get('PageURLToManifestURL');

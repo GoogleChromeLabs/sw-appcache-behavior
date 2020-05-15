@@ -10,7 +10,7 @@
     <p>This is step 1.</p>
 
     <script type="module">
-      import {init} from '../../packages/appcache-polyfill-window/build/index.mjs';
+      import {init} from '../../packages/appcache-polyfill-window/build/index.modern.js';
       window.setupComplete = (async () => {
         await init();
         await navigator.serviceWorker.register('sw.js');

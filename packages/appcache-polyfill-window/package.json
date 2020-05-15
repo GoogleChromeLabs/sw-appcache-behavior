@@ -1,6 +1,6 @@
 {
   "name": "appcache-polyfill-window",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Code running in the context of a window, to accompany appcache-polyfill-sw.",
   "keywords": [
     "appcache",
@@ -20,7 +20,8 @@
   "bugs": "https://github.com/googlechromelabs/sw-appcache-behavior/issues",
   "homepage": "https://github.com/googlechromelabs/sw-appcache-behavior/",
   "main": "build/index.umd.js",
-  "module": "build/index.mjs",
+  "unpkg": "build/index.umd.js",
+  "module": "build/index.modern.js",
   "files": [
     "build"
   ]

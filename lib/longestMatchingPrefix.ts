@@ -15,7 +15,7 @@
 
 export function longestMatchingPrefix(
     urlPrefixes: Array<string>,
-    fullUrl: string
+    fullUrl: string,
 ) {
   return urlPrefixes
       .filter((urlPrefix) => fullUrl.startsWith(urlPrefix))

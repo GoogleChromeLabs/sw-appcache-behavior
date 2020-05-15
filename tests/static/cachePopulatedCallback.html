@@ -1,19 +1,28 @@
 <!DOCTYPE html>
-<html>
+<html manifest="manifest1.appcache">
   <head>
     <meta charset="UTF-8">
-    <title>Step 3</title>
+    <title>cachePopulatedCallback</title>
     <link rel="stylesheet" href="common.css">
     <link rel="icon" href="favicon.png">
   </head>
   <body>
-    <p>This is step 3.</p>
+    <p>This is the cachePopulatedCallback test.</p>
 
     <script type="module">
       import {init} from '../../packages/appcache-polyfill-window/build/index.modern.js';
+
       window.setupComplete = (async () => {
-        await init();
+        const callbacks = [];
+
+        await init({
+          cachePopulatedCallback: (...args) => {
+            callbacks.push(args);
+          },
+        });
         await navigator.serviceWorker.register('sw.js');
+
+        return callbacks;
       })();
     </script>
   </body>
