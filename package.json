@@ -44,7 +44,7 @@
     "clean": "rimraf packages/*/build",
     "lint": "eslint --ignore-path .gitignore lib/*.ts packages/**/*.ts tests/*.js",
     "publish": "lerna publish",
-    "test": "npm run build && mocha --delay tests/test-suite.js",
+    "test": "mocha --delay tests/test-suite.js",
     "test-server": "node tests/server.js"
   }
 }

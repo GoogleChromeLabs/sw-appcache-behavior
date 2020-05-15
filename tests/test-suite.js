@@ -190,6 +190,20 @@
           `${global.baseUrl}step4.html`,
         ]);
       });
+
+      it('should trigger cachePopulatedCallback when the cache is updated', async function() {
+        await page.goto(`${global.baseUrl}cachePopulatedCallback.html`);
+        const callbacks = await page.evaluate(async () => {
+          return window.setupComplete;
+        });
+
+        expect(callbacks[0][0]).to.have.members([
+          'http://localhost:8080/tests/static/common.css',
+          'http://localhost:8080/tests/static/step1.html',
+          'http://localhost:8080/tests/static/step2.html',
+          'http://localhost:8080/tests/static/cachePopulatedCallback.html',
+        ]);
+      });
     });
   }
 
