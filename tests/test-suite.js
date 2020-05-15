@@ -174,12 +174,12 @@
           await window.setupComplete;
         });
 
-        const oldCacheName1 = 'efe1a9f22297dec3101383dea9f670a4e38d32d86e2917702b0bee26d370d459';
-        const oldCacheName2 = '3656ff69894c958b6be485f40a92f436b2aeabb3192ddff5159d97209f50feb8';
+        const oldCacheName = '3656ff69894c958b6be485f40a92f436b2aeabb3192ddff5159d97209f50feb8';
         const newCacheName = '40468bed94b0c172081eb8f2e1e311a5a3e0ef25abe8358338f8fc905ce0cb08';
 
         const caches = await page.evaluate(() => caches.keys());
-        expect(caches).to.have.members([oldCacheName1, oldCacheName2, newCacheName]);
+        expect(caches).to.include(oldCacheName);
+        expect(caches).to.include(newCacheName);
 
         const cacheEntries = await page.evaluate(async (newCacheName) => {
           const cache = await caches.open(newCacheName);
