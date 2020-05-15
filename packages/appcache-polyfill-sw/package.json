@@ -1,6 +1,6 @@
 {
   "name": "appcache-polyfill-sw",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A service worker implementation of the behavior defined in a page's App Cache manifest.",
   "keywords": [
     "appcache",
