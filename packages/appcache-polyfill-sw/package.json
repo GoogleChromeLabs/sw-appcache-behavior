@@ -20,6 +20,7 @@
   "bugs": "https://github.com/googlechromelabs/sw-appcache-behavior/issues",
   "homepage": "https://github.com/googlechromelabs/sw-appcache-behavior/",
   "main": "build/index.umd.js",
+  "unpkg": "build/index.umd.js",
   "files": [
     "build"
   ]

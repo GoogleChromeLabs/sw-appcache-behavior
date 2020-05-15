@@ -17,7 +17,7 @@ import {Manifest} from './interfaces';
 
 export function parseManifest(
     rawManifest: string,
-    baseUrl: string = location.href
+    baseUrl: string = location.href,
 ) {
   const manifest: Manifest = {
     cache: [],

@@ -82,7 +82,7 @@ async function appCacheLogic(
     event: FetchEvent,
     manifest: Manifest,
     hash: string,
-    clientUrl: string
+    clientUrl: string,
 ) {
   const requestUrl = event.request.url;
 
@@ -119,7 +119,7 @@ async function appCacheLogic(
 async function manifestBehavior(
     event: FetchEvent,
     manifestUrl: string,
-    clientUrl: string
+    clientUrl: string,
 ) {
   if (event.clientId) {
     const clientIdToHash: ClientIdToHash = await storage.get('ClientIdToHash');
@@ -192,7 +192,7 @@ async function noManifestBehavior(event: FetchEvent) {
     return fetchWithFallback(
         event.request,
         effectiveManifest.fallback[currentLongestPrefix],
-        cacheName
+        cacheName,
     );
   }
 

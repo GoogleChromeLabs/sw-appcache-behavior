@@ -16,7 +16,7 @@
 export async function fetchWithFallback(
     request: Request,
     fallbackUrl: string,
-    cacheName: string
+    cacheName: string,
 ) {
   try {
     const response = await fetch(request);

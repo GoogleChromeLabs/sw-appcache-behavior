@@ -26,7 +26,7 @@ As an alternative to local installation & serving, you can load both libraries f
 
 ```html
 <script type="module">
-  import {init} from '/path/to/appcache-polyfill-window/build/index.mjs';
+  import {init} from '/path/to/appcache-polyfill-window/build/index.modern.js';
 
   // Optional: define a callback that runs whenever caches are updated.
   // This is *rough* replacement for listening for AppCache updates.
