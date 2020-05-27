@@ -24,5 +24,15 @@
   "module": "build/index.modern.js",
   "files": [
     "build"
-  ]
+  ],
+  "source": "index.ts",
+  "devDependencies": {
+    "microbundle": "^0.12.0",
+    "rimraf": "^3.0.2"
+  },
+  "scripts": {
+    "build": "npm run clean && microbundle --name=appcachePolyfill",
+    "clean": "rimraf build"
+  },
+  "types": "build/packages/appcache-polyfill-window/index.d.ts"
 }

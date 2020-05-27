@@ -1,0 +1,8 @@
+{
+  "files": [
+    "index.ts"
+  ],
+  "references": [
+    { "path": "../../lib/" }
+  ]
+}
