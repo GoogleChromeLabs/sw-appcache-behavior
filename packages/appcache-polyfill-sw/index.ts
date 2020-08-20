@@ -207,7 +207,10 @@ async function appCacheBehaviorForEvent(event: FetchEvent) {
     return fetch(event.request);
   }
 
-  const requestUrl = new URL(event.request.url);
+  const originalUrl = event.request.url;
+  const urlWithoutHash = originalUrl.split('#')[0];
+
+  const requestUrl = new URL(urlWithoutHash);
 
   // Appcache rules only apply to GETs & same-scheme requests.
   if (event.request.method !== 'GET' ||
@@ -215,7 +218,10 @@ async function appCacheBehaviorForEvent(event: FetchEvent) {
     return fetch(event.request);
   }
 
-  const clientUrl = await getClientUrlForEvent(event);
+  const originalClientUrl = await getClientUrlForEvent(event);
+  const clientUrlWithoutHash = originalClientUrl.split('#')[0];
+
+  const clientUrl = clientUrlWithoutHash;
   const pageURLToManifestURL: PageURLToManifestURL =
       await storage.get('PageURLToManifestURL');
   const manifestUrl = pageURLToManifestURL[clientUrl];
