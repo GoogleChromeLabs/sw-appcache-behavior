@@ -96,6 +96,28 @@
         ]);
       });
 
+      it('should ignore the hash portion of the URL when associating pages with manifests', async function() {
+        await page.goto(`${global.baseUrl}step1.html#should_be_ignored`);
+        await page.evaluate(async () => {
+          await window.setupComplete;
+        });
+
+        const expectedCacheName = 'efe1a9f22297dec3101383dea9f670a4e38d32d86e2917702b0bee26d370d459';
+
+        const caches = await page.evaluate(() => caches.keys());
+        expect(caches).to.have.members([expectedCacheName]);
+
+        const cacheEntries = await page.evaluate(async (expectedCacheName) => {
+          const cache = await caches.open(expectedCacheName);
+          const keys = await cache.keys();
+          return keys.map((request) => request.url);
+        }, expectedCacheName);
+        expect(cacheEntries).to.have.members([
+          `${global.baseUrl}common.css`,
+          `${global.baseUrl}step1.html`,
+        ]);
+      });
+
       it('should add a new master entry for an additional navigation', async function() {
         await page.goto(`${global.baseUrl}step2.html`);
         await page.evaluate(async () => {
