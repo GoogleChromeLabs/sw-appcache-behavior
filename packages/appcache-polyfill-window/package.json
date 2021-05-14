@@ -1,6 +1,6 @@
 {
   "name": "appcache-polyfill-window",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Code running in the context of a window, to accompany appcache-polyfill-sw.",
   "keywords": [
     "appcache",
