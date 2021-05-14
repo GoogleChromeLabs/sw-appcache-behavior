@@ -15,6 +15,7 @@
 
 import {getHash} from '../../lib/getHash';
 import {parseManifest} from '../../lib/parseManifest';
+import {removeURLHash} from '../../lib/removeURLHash';
 import * as storage from '../../lib/storageWithDefault';
 
 import {
@@ -203,13 +204,14 @@ async function updateManifestAssociationForCurrentPage(
     manifestUrl: string,
     hash: string,
 ) {
+  // See https://github.com/GoogleChromeLabs/sw-appcache-behavior/issues/31
   const pageURLToManifestURL: PageURLToManifestURL =
       await storage.get('PageURLToManifestURL');
-  pageURLToManifestURL[location.href] = manifestUrl;
+  pageURLToManifestURL[removeURLHash(location.href)] = manifestUrl;
 
   await Promise.all([
     storage.set('PageURLToManifestURL', pageURLToManifestURL),
-    addToCache(hash, [location.href]),
+    addToCache(hash, [removeURLHash(location.href)]),
   ]);
 }
 

@@ -18,6 +18,7 @@ declare const self: ServiceWorkerGlobalScope;
 
 import {fetchWithFallback} from '../../lib/fetchWithFallback';
 import {longestMatchingPrefix} from '../../lib/longestMatchingPrefix';
+import {removeURLHash} from '../../lib/removeURLHash';
 import * as storage from '../../lib/storageWithDefault';
 
 import {
@@ -84,7 +85,7 @@ async function appCacheLogic(
     hash: string,
     clientUrl: string,
 ) {
-  const requestUrl = event.request.url;
+  const requestUrl = removeURLHash(event.request.url);
 
   // Is our request URL listed in the CACHES section?
   // Or is our request URL the client URL, since any page that
@@ -207,10 +208,8 @@ async function appCacheBehaviorForEvent(event: FetchEvent) {
     return fetch(event.request);
   }
 
-  const originalUrl = event.request.url;
-  const urlWithoutHash = originalUrl.split('#')[0];
-
-  const requestUrl = new URL(urlWithoutHash);
+  // See https://github.com/GoogleChromeLabs/sw-appcache-behavior/pull/17
+  const requestUrl = new URL(removeURLHash(event.request.url));
 
   // Appcache rules only apply to GETs & same-scheme requests.
   if (event.request.method !== 'GET' ||
@@ -219,9 +218,7 @@ async function appCacheBehaviorForEvent(event: FetchEvent) {
   }
 
   const originalClientUrl = await getClientUrlForEvent(event);
-  const clientUrlWithoutHash = originalClientUrl.split('#')[0];
-
-  const clientUrl = clientUrlWithoutHash;
+  const clientUrl = removeURLHash(originalClientUrl);
   const pageURLToManifestURL: PageURLToManifestURL =
       await storage.get('PageURLToManifestURL');
   const manifestUrl = pageURLToManifestURL[clientUrl];
