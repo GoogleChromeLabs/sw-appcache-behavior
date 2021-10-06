@@ -164,7 +164,7 @@ async function noManifestBehavior(event: FetchEvent) {
   // there are multiple matches, the longest prefix wins. If there are
   // multiple prefixes of the same length in different manifest, then
   // the one we access last wins. (This might not match browser behavior.)
-  // See https://www.w3.org/TR/2011/WD-html5-20110525/offline.html#concept-appcache-matches-fallback
+  // See https://web.archive.org/web/20201129180031/https://html.spec.whatwg.org/multipage/offline.html#concept-appcache-matches-fallback
   const manifestURLToHashes: ManifestURLToHashes =
     await storage.get('ManifestURLToHashes');
 

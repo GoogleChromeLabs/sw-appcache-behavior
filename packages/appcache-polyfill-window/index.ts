@@ -60,7 +60,7 @@ async function addToCache(hash: string, urls: Array<string>) {
   const cache = await caches.open(hash);
 
   await Promise.all(urls.map(async (url) => {
-    // See Item 18.3 of https://html.spec.whatwg.org/multipage/browsers.html#downloading-or-updating-an-application-cache
+    // See Item 18.3 of https://web.archive.org/web/20201129180031/https://html.spec.whatwg.org/multipage/offline.html#downloading-or-updating-an-application-cache
     const init: RequestInit = {
       credentials: 'include',
       headers: [['X-Use-Fetch', 'true']],
@@ -83,7 +83,7 @@ async function addToCache(hash: string, urls: Array<string>) {
         return;
       }
 
-      // See Item 18.5 of https://html.spec.whatwg.org/multipage/browsers.html#downloading-or-updating-an-application-cache
+      // See Item 18.5 of https://web.archive.org/web/20201129180031/https://html.spec.whatwg.org/multipage/offline.html#downloading-or-updating-an-application-cache
       if (response.status !== 404 && response.status !== 410) {
         // Assuming this isn't a 200, 404 or 410, we want the catch to
         // trigger, which will cause any previously cached Response for this
@@ -104,7 +104,7 @@ async function addToCache(hash: string, urls: Array<string>) {
 }
 
 async function checkManifestVersion(manifestUrl: string) {
-  // See Item 4 of https://html.spec.whatwg.org/multipage/browsers.html#downloading-or-updating-an-application-cache
+  // See Item 4 of https://web.archive.org/web/20201129180031/https://html.spec.whatwg.org/multipage/offline.html#downloading-or-updating-an-application-cache
   const init: RequestInit = {
     credentials: 'include',
     headers: [['X-Use-Fetch', 'true']],
@@ -112,7 +112,7 @@ async function checkManifestVersion(manifestUrl: string) {
   const manifestRequest = new Request(manifestUrl, init);
 
   let manifestResponse = await fetch(manifestRequest);
-  // See Item 6 of https://html.spec.whatwg.org/multipage/offline.html#downloading-or-updating-an-application-cache
+  // See Item 6 of https://web.archive.org/web/20201129180031/https://html.spec.whatwg.org/multipage/offline.html#downloading-or-updating-an-application-cache
   if (manifestResponse.status === 404 || manifestResponse.status === 410) {
     // TODO: Double check that this is a reasonable approach.
     // If the manifest has explicitly been removed, then remove our saved state
@@ -122,7 +122,7 @@ async function checkManifestVersion(manifestUrl: string) {
     return null;
   }
 
-  // See https://html.spec.whatwg.org/multipage/offline.html#cache-failure-steps
+  // See https://web.archive.org/web/20201129180031/https://html.spec.whatwg.org/multipage/offline.html#cache-failure-steps
   if (manifestResponse.status !== 200) {
     // TODO: Double check that this is a reasonable approach.
     // For non-200/404/410 responses, just abort.
