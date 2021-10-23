@@ -18,7 +18,6 @@
   const {expect} = require('chai');
   const puppeteerChrome = require('puppeteer');
   const puppeteerFirefox = require('puppeteer-firefox');
-  const UAParser = require('ua-parser-js');
 
   const browserToUserAgentMapping = new Map();
   for (const puppeteer of [puppeteerChrome, puppeteerFirefox]) {
@@ -30,10 +29,7 @@
     const browser = await puppeteer.launch(config);
 
     const userAgentString = await browser.userAgent();
-    const uaParser = new UAParser(userAgentString);
-    const {name, version} = uaParser.getBrowser();
-
-    browserToUserAgentMapping.set(browser, `${name} ${version}`);
+    browserToUserAgentMapping.set(browser, userAgentString);
   }
 
   let server;
