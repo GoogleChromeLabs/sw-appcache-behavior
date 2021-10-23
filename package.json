@@ -32,8 +32,7 @@
     "lerna": "^4.0.0",
     "mocha": "^8.4.0",
     "puppeteer": "^9.1.1",
-    "puppeteer-firefox": "^0.5.1",
-    "ua-parser-js": "^0.7.28"
+    "puppeteer-firefox": "^0.5.1"
   },
   "scripts": {
     "build-sw": "cd packages/appcache-polyfill-sw && npm run build && cd -",
