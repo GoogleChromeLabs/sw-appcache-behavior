@@ -30,7 +30,7 @@
     "express": "^4.17.1",
     "idb-keyval": "^5.0.5",
     "lerna": "^4.0.0",
-    "mocha": "^8.4.0",
+    "mocha": "^11.7.5",
     "puppeteer": "^9.1.1",
     "puppeteer-firefox": "^0.5.1"
   },
